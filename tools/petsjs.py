@@ -19,7 +19,7 @@ js = r"""/* 325 Overcreek - Huckleberry and the cat: sprite markup and idle anim
       state(t) {
         const tilt = keys((t % 4.2) / 4.2, [[0, 0], [0.62, 0], [0.70, -9], [0.86, -9], [0.94, 0], [1, 0]]);
         const s = blink(t, 2.8, 1.1);
-        return { 'dog-head': 'rotate(' + tilt.toFixed(2) + ' 30 40)', 'dog-eyes': 'translate(0 728.5) scale(1 ' + s.toFixed(3) + ') translate(0 -728.5)' };
+        return { 'dog-head': 'rotate(' + tilt.toFixed(2) + ' 30 46)', 'dog-eyes': 'translate(0 728.5) scale(1 ' + s.toFixed(3) + ') translate(0 -728.5)' };
       } },
     cat: { w: 70, h: 90, markup: CATM,
       state(t) {

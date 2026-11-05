@@ -1,26 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100" width="600" height="1000"><title>Huckleberry</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100" width="600" height="1000"><title>Huckleberry, paws up at the window (325 Overcreek)</title>
 <g class="pet-dog" stroke-linejoin="round" stroke-linecap="round">
-  <!-- body standing on the window seat (lower part sits behind the balcony railing) -->
-  <g stroke="#3a3936" stroke-width="1">
-    <path d="M10 100 C7 78 11 53 30 46 C49 53 53 78 50 100 Z" fill="#f6f3ee"/>
-    <path d="M22 100 C21 84 24 70 30 68 C36 70 39 84 38 100 Z" fill="#fbf9f4" stroke-width="0.7"/>
-  </g>
-  <!-- front legs raised, paws pressed on the glass -->
-  <g stroke="#3a3936" stroke-width="1" fill="#f6f3ee">
-    <path d="M14 82 C10 74 9 66 12 59 L19 58 C20 65 20 73 21 80 Z"/>
-    <path d="M46 82 C50 74 51 66 48 59 L41 58 C40 65 40 73 39 80 Z"/>
-    <circle cx="13.2" cy="57.6" r="2.4"/><circle cx="16.2" cy="56.4" r="2.4"/><circle cx="19.2" cy="57.6" r="2.4"/><circle cx="16.2" cy="59.6" r="2.6"/>
-    <circle cx="46.8" cy="57.6" r="2.4"/><circle cx="43.8" cy="56.4" r="2.4"/><circle cx="40.8" cy="57.6" r="2.4"/><circle cx="43.8" cy="59.6" r="2.6"/>
-  </g>
-  <!-- red bandana (sheet artwork) -->
-  <g transform="translate(30 31) scale(0.74) translate(-561 -731)" stroke="#3a3936" stroke-width="1.4" stroke-linejoin="round">
+  <!-- round fluffy chest and body (the lower part sits behind the balcony railing) -->
+  <g stroke="#3a3936" stroke-width="1.25"><circle cx="46.00" cy="80.00" r="5.2" fill="#f6f3ee"/><circle cx="44.78" cy="88.42" r="5.2" fill="#f6f3ee"/><circle cx="41.31" cy="95.56" r="5.2" fill="#f6f3ee"/><circle cx="36.12" cy="100.33" r="5.2" fill="#f6f3ee"/><circle cx="30.00" cy="102.00" r="5.2" fill="#f6f3ee"/><circle cx="23.88" cy="100.33" r="5.2" fill="#f6f3ee"/><circle cx="18.69" cy="95.56" r="5.2" fill="#f6f3ee"/><circle cx="15.22" cy="88.42" r="5.2" fill="#f6f3ee"/><circle cx="14.00" cy="80.00" r="5.2" fill="#f6f3ee"/><circle cx="15.22" cy="71.58" r="5.2" fill="#f6f3ee"/><circle cx="18.69" cy="64.44" r="5.2" fill="#f6f3ee"/><circle cx="23.88" cy="59.67" r="5.2" fill="#f6f3ee"/><circle cx="30.00" cy="58.00" r="5.2" fill="#f6f3ee"/><circle cx="36.12" cy="59.67" r="5.2" fill="#f6f3ee"/><circle cx="41.31" cy="64.44" r="5.2" fill="#f6f3ee"/><circle cx="44.78" cy="71.58" r="5.2" fill="#f6f3ee"/></g>
+  <ellipse cx="30" cy="80" rx="16" ry="22" fill="#f6f3ee"/>
+  <g stroke="#3a3936" stroke-width="1.2"><circle cx="42.50" cy="60.00" r="4.6" fill="#f6f3ee"/><circle cx="40.83" cy="64.50" r="4.6" fill="#f6f3ee"/><circle cx="36.25" cy="67.79" r="4.6" fill="#f6f3ee"/><circle cx="30.00" cy="69.00" r="4.6" fill="#f6f3ee"/><circle cx="23.75" cy="67.79" r="4.6" fill="#f6f3ee"/><circle cx="19.17" cy="64.50" r="4.6" fill="#f6f3ee"/><circle cx="17.50" cy="60.00" r="4.6" fill="#f6f3ee"/><circle cx="19.17" cy="55.50" r="4.6" fill="#f6f3ee"/><circle cx="23.75" cy="52.21" r="4.6" fill="#f6f3ee"/><circle cx="30.00" cy="51.00" r="4.6" fill="#f6f3ee"/><circle cx="36.25" cy="52.21" r="4.6" fill="#f6f3ee"/><circle cx="40.83" cy="55.50" r="4.6" fill="#f6f3ee"/></g>
+  <ellipse cx="30" cy="60" rx="12.5" ry="9" fill="#f6f3ee"/>
+  <path d="M22 76 q3 -3 6 0 M32 76 q3 -3 6 0 M26 85 q3 -3 6 0" fill="none" stroke="#d8d1c6" stroke-width="1"/>
+  <!-- front legs bent up, paws resting on the glass -->
+  <g stroke="#3a3936" stroke-width="1.1" fill="#f6f3ee"><circle cx="19.00" cy="72.00" r="3.6"/><circle cx="17.12" cy="68.75" r="3.6"/><circle cx="15.25" cy="65.50" r="3.6"/><circle cx="13.38" cy="62.25" r="3.6"/><circle cx="11.50" cy="59.00" r="3.6"/></g><g fill="#f6f3ee"><circle cx="19.00" cy="72.00" r="2.45"/><circle cx="17.12" cy="68.75" r="2.45"/><circle cx="15.25" cy="65.50" r="2.45"/><circle cx="13.38" cy="62.25" r="2.45"/><circle cx="11.50" cy="59.00" r="2.45"/></g>
+  <g stroke="#3a3936" stroke-width="1.1" fill="#f6f3ee"><circle cx="41.00" cy="72.00" r="3.6"/><circle cx="42.88" cy="68.75" r="3.6"/><circle cx="44.75" cy="65.50" r="3.6"/><circle cx="46.62" cy="62.25" r="3.6"/><circle cx="48.50" cy="59.00" r="3.6"/></g><g fill="#f6f3ee"><circle cx="41.00" cy="72.00" r="2.45"/><circle cx="42.88" cy="68.75" r="2.45"/><circle cx="44.75" cy="65.50" r="2.45"/><circle cx="46.62" cy="62.25" r="2.45"/><circle cx="48.50" cy="59.00" r="2.45"/></g>
+  <g stroke="#3a3936" stroke-width="1.1" fill="#f6f3ee"><ellipse cx="11" cy="58.13" rx="4.62" ry="3.78"/><circle cx="8.27" cy="55.82" r="1.99"/><circle cx="11.00" cy="54.77" r="1.99"/><circle cx="13.73" cy="55.82" r="1.99"/><ellipse cx="11" cy="58.45" rx="3.36" ry="2.52" stroke="none"/></g><path d="M9.63 56.55 v1.4 M12.37 56.55 v1.4" stroke="#d8d1c6" stroke-width="0.7" fill="none"/>
+  <g stroke="#3a3936" stroke-width="1.1" fill="#f6f3ee"><ellipse cx="49" cy="58.13" rx="4.62" ry="3.78"/><circle cx="46.27" cy="55.82" r="1.99"/><circle cx="49.00" cy="54.77" r="1.99"/><circle cx="51.73" cy="55.82" r="1.99"/><ellipse cx="49" cy="58.45" rx="3.36" ry="2.52" stroke="none"/></g><path d="M47.63 56.55 v1.4 M50.37 56.55 v1.4" stroke="#d8d1c6" stroke-width="0.7" fill="none"/>
+  <!-- red bandana -->
+  <g transform="translate(30 37.5) scale(0.8) translate(-561 -731)" stroke="#3a3936" stroke-width="1.3" stroke-linejoin="round">
     <path d="M546 744.5 Q561 750.5 576 744.5 L573.5 749.5 L561 761.5 L548.5 749.5 Z" fill="#c8372d"/>
     <path d="M550 748.5 Q561 753 572 748.5" fill="none" stroke="#9e2a22" stroke-width="1"/>
     <circle cx="556" cy="752" r="1" fill="#f6f3ee" stroke="none"/><circle cx="566" cy="752" r="1" fill="#f6f3ee" stroke="none"/><circle cx="561" cy="756.5" r="1" fill="#f6f3ee" stroke="none"/>
   </g>
-  <!-- head: the original sheet artwork, so he stays on-model -->
-  <g class="dog-head" style="transform-origin:30px 40px">
-   <g transform="translate(30 31) scale(0.74) translate(-561 -731)">
+  <!-- head: the sheet artwork, happy open-mouth smile -->
+  <g class="dog-head"><g transform="translate(30 33) scale(0.8) translate(-561 -731)">
     <g stroke="#3a3936" stroke-width="1.35"><circle cx="549.0" cy="738.0" r="5.2" fill="#f6f3ee"/><circle cx="546.7" cy="742.7" r="5.2" fill="#f6f3ee"/><circle cx="541.7" cy="743.8" r="5.2" fill="#f6f3ee"/><circle cx="537.6" cy="740.6" r="5.2" fill="#f6f3ee"/><circle cx="537.6" cy="735.4" r="5.2" fill="#f6f3ee"/><circle cx="541.7" cy="732.2" r="5.2" fill="#f6f3ee"/><circle cx="546.7" cy="733.3" r="5.2" fill="#f6f3ee"/><circle cx="585.0" cy="738.0" r="5.2" fill="#f6f3ee"/><circle cx="582.7" cy="742.7" r="5.2" fill="#f6f3ee"/><circle cx="577.7" cy="743.8" r="5.2" fill="#f6f3ee"/><circle cx="573.6" cy="740.6" r="5.2" fill="#f6f3ee"/><circle cx="573.6" cy="735.4" r="5.2" fill="#f6f3ee"/><circle cx="577.7" cy="732.2" r="5.2" fill="#f6f3ee"/><circle cx="582.7" cy="733.3" r="5.2" fill="#f6f3ee"/></g>
     <g stroke="#3a3936" stroke-width="1.45"><circle cx="575.0" cy="731.0" r="5.4" fill="#f6f3ee"/><circle cx="573.1" cy="738.0" r="5.4" fill="#f6f3ee"/><circle cx="568.0" cy="743.1" r="5.4" fill="#f6f3ee"/><circle cx="561.0" cy="745.0" r="5.4" fill="#f6f3ee"/><circle cx="554.0" cy="743.1" r="5.4" fill="#f6f3ee"/><circle cx="548.9" cy="738.0" r="5.4" fill="#f6f3ee"/><circle cx="547.0" cy="731.0" r="5.4" fill="#f6f3ee"/><circle cx="548.9" cy="724.0" r="5.4" fill="#f6f3ee"/><circle cx="554.0" cy="718.9" r="5.4" fill="#f6f3ee"/><circle cx="561.0" cy="717.0" r="5.4" fill="#f6f3ee"/><circle cx="568.0" cy="718.9" r="5.4" fill="#f6f3ee"/><circle cx="573.1" cy="724.0" r="5.4" fill="#f6f3ee"/></g>
     <circle cx="561" cy="731" r="14.5" fill="#f6f3ee"/>
@@ -29,8 +27,8 @@
     <g class="dog-eyes" style="transform-origin:561px 728.5px"><circle cx="555.5" cy="728.5" r="2.1" fill="#1f1e22"/><circle cx="567" cy="728.5" r="2.1" fill="#1f1e22"/></g>
     <ellipse cx="561" cy="738.5" rx="8" ry="5.6" fill="#fbf9f4" stroke="#cfc8bc" stroke-width="1"/>
     <ellipse cx="561" cy="735.6" rx="3.1" ry="2.3" fill="#1f1e22"/>
-    <path d="M558 740.5 Q561 743.5 564 740.5" fill="none" stroke="#3a3936" stroke-width="1.2"/>
-   </g>
-  </g>
+    <path d="M557.4 740.2 Q561 745.6 564.6 740.2 Z" fill="#7a2f2a" stroke="#3a3936" stroke-width="1.1"/><path d="M559.2 742.6 Q561 745.4 562.8 742.6 Q561 741.6 559.2 742.6 Z" fill="#e58f8a" stroke="none"/>
+
+  </g></g>
 </g>
 </svg>
