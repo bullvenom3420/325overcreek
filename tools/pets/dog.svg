@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100" width="600" height="1000"><title>Huckleberry</title>
+<g class="pet-dog" stroke-linejoin="round" stroke-linecap="round">
+  <!-- body standing on the window seat (lower part sits behind the balcony railing) -->
+  <g stroke="#3a3936" stroke-width="1">
+    <path d="M10 100 C7 78 11 53 30 46 C49 53 53 78 50 100 Z" fill="#f6f3ee"/>
+    <path d="M22 100 C21 84 24 70 30 68 C36 70 39 84 38 100 Z" fill="#fbf9f4" stroke-width="0.7"/>
+  </g>
+  <!-- front legs raised, paws pressed on the glass -->
+  <g stroke="#3a3936" stroke-width="1" fill="#f6f3ee">
+    <path d="M14 82 C10 74 9 66 12 59 L19 58 C20 65 20 73 21 80 Z"/>
+    <path d="M46 82 C50 74 51 66 48 59 L41 58 C40 65 40 73 39 80 Z"/>
+    <circle cx="13.2" cy="57.6" r="2.4"/><circle cx="16.2" cy="56.4" r="2.4"/><circle cx="19.2" cy="57.6" r="2.4"/><circle cx="16.2" cy="59.6" r="2.6"/>
+    <circle cx="46.8" cy="57.6" r="2.4"/><circle cx="43.8" cy="56.4" r="2.4"/><circle cx="40.8" cy="57.6" r="2.4"/><circle cx="43.8" cy="59.6" r="2.6"/>
+  </g>
+  <!-- red bandana (sheet artwork) -->
+  <g transform="translate(30 31) scale(0.74) translate(-561 -731)" stroke="#3a3936" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M546 744.5 Q561 750.5 576 744.5 L573.5 749.5 L561 761.5 L548.5 749.5 Z" fill="#c8372d"/>
+    <path d="M550 748.5 Q561 753 572 748.5" fill="none" stroke="#9e2a22" stroke-width="1"/>
+    <circle cx="556" cy="752" r="1" fill="#f6f3ee" stroke="none"/><circle cx="566" cy="752" r="1" fill="#f6f3ee" stroke="none"/><circle cx="561" cy="756.5" r="1" fill="#f6f3ee" stroke="none"/>
+  </g>
+  <!-- head: the original sheet artwork, so he stays on-model -->
+  <g class="dog-head" style="transform-origin:30px 40px">
+   <g transform="translate(30 31) scale(0.74) translate(-561 -731)">
+    <g stroke="#3a3936" stroke-width="1.35"><circle cx="549.0" cy="738.0" r="5.2" fill="#f6f3ee"/><circle cx="546.7" cy="742.7" r="5.2" fill="#f6f3ee"/><circle cx="541.7" cy="743.8" r="5.2" fill="#f6f3ee"/><circle cx="537.6" cy="740.6" r="5.2" fill="#f6f3ee"/><circle cx="537.6" cy="735.4" r="5.2" fill="#f6f3ee"/><circle cx="541.7" cy="732.2" r="5.2" fill="#f6f3ee"/><circle cx="546.7" cy="733.3" r="5.2" fill="#f6f3ee"/><circle cx="585.0" cy="738.0" r="5.2" fill="#f6f3ee"/><circle cx="582.7" cy="742.7" r="5.2" fill="#f6f3ee"/><circle cx="577.7" cy="743.8" r="5.2" fill="#f6f3ee"/><circle cx="573.6" cy="740.6" r="5.2" fill="#f6f3ee"/><circle cx="573.6" cy="735.4" r="5.2" fill="#f6f3ee"/><circle cx="577.7" cy="732.2" r="5.2" fill="#f6f3ee"/><circle cx="582.7" cy="733.3" r="5.2" fill="#f6f3ee"/></g>
+    <g stroke="#3a3936" stroke-width="1.45"><circle cx="575.0" cy="731.0" r="5.4" fill="#f6f3ee"/><circle cx="573.1" cy="738.0" r="5.4" fill="#f6f3ee"/><circle cx="568.0" cy="743.1" r="5.4" fill="#f6f3ee"/><circle cx="561.0" cy="745.0" r="5.4" fill="#f6f3ee"/><circle cx="554.0" cy="743.1" r="5.4" fill="#f6f3ee"/><circle cx="548.9" cy="738.0" r="5.4" fill="#f6f3ee"/><circle cx="547.0" cy="731.0" r="5.4" fill="#f6f3ee"/><circle cx="548.9" cy="724.0" r="5.4" fill="#f6f3ee"/><circle cx="554.0" cy="718.9" r="5.4" fill="#f6f3ee"/><circle cx="561.0" cy="717.0" r="5.4" fill="#f6f3ee"/><circle cx="568.0" cy="718.9" r="5.4" fill="#f6f3ee"/><circle cx="573.1" cy="724.0" r="5.4" fill="#f6f3ee"/></g>
+    <circle cx="561" cy="731" r="14.5" fill="#f6f3ee"/>
+    <path d="M551.2 724.6 Q555.4 721.4 559.6 724.2" fill="none" stroke="#1f1e22" stroke-width="2.6"/>
+    <path d="M550 720 q4 -5 8 -1 q4 -5 8 -1 q4 -4 7 1" fill="none" stroke="#d8d1c6" stroke-width="1.2"/>
+    <g class="dog-eyes" style="transform-origin:561px 728.5px"><circle cx="555.5" cy="728.5" r="2.1" fill="#1f1e22"/><circle cx="567" cy="728.5" r="2.1" fill="#1f1e22"/></g>
+    <ellipse cx="561" cy="738.5" rx="8" ry="5.6" fill="#fbf9f4" stroke="#cfc8bc" stroke-width="1"/>
+    <ellipse cx="561" cy="735.6" rx="3.1" ry="2.3" fill="#1f1e22"/>
+    <path d="M558 740.5 Q561 743.5 564 740.5" fill="none" stroke="#3a3936" stroke-width="1.2"/>
+   </g>
+  </g>
+</g>
+</svg>

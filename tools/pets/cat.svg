@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 90" width="700" height="900"><title>The cat</title>
+<g class="pet-cat" stroke="#3a3936" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
+  <!-- tail curling up from behind the jamb -->
+  <g class="cat-tail" style="transform-origin:4px 88px"><path d="M4 88 C14 86 18 76 13 68 C11 64 15 61 18 64" fill="none" stroke="#3a3936" stroke-width="5.2"/><path d="M4 88 C14 86 18 76 13 68 C11 64 15 61 18 64" fill="none" stroke="#a3a2a6" stroke-width="3.2"/></g>
+  <!-- body leaning in from the left edge, sitting on the sill -->
+  <path d="M-6 89 C-6 74 2 64 12 63 C20 64 24 74 23 89 Z" fill="#a3a2a6"/>
+  <path d="M6 70 q4 -1 7 1 M5 76 q5 -1 9 1" fill="none" stroke="#7d7c81" stroke-width="1"/>
+  <!-- front paw on the sill -->
+  <ellipse cx="20" cy="87.2" rx="4.2" ry="2.4" fill="#b4b3b7"/>
+  <!-- head peeking around the jamb -->
+  <g class="cat-head" style="transform-origin:12px 58px">
+    <path d="M1.5 47 L3 35.5 L10.5 43 Z" fill="#a3a2a6"/><path d="M3.6 44.5 L4.2 38.6 L8 42.6 Z" fill="#e7c9c3" stroke="none"/>
+    <path d="M16 43 L24 36 L24.5 47.5 Z" fill="#a3a2a6"/><path d="M18.4 43.2 L22.6 39.4 L22.8 45.2 Z" fill="#e7c9c3" stroke="none"/>
+    <ellipse cx="12.5" cy="52" rx="12.5" ry="10.4" fill="#a3a2a6"/>
+    <path d="M9 43 l1 3.5 M12.5 42 l0 3.8 M16 43 l-1 3.5" stroke="#7d7c81" stroke-width="1"/>
+    <g class="cat-eyes" style="transform-origin:12.5px 51px"><ellipse cx="8" cy="51" rx="1.7" ry="2.2" fill="#1f1e22" stroke="none"/><ellipse cx="17" cy="51" rx="1.7" ry="2.2" fill="#1f1e22" stroke="none"/></g>
+    <path d="M11.3 55 L13.7 55 L12.5 56.6 Z" fill="#d9a0a0" stroke="#3a3936" stroke-width="0.6"/>
+    <path d="M10.5 58 Q12.5 59.4 12.5 57 Q12.5 59.4 14.5 58" fill="none" stroke-width="0.8"/>
+    <path d="M3 55 l-5 -1 M3 57 l-5 1 M22 55 l5 -1 M22 57 l5 1" stroke="#3a3936" stroke-width="0.5"/>
+  </g>
+</g>
+</svg>
