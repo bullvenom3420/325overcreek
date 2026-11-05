@@ -422,7 +422,7 @@
   /* ---- animated pet copies: drawn exactly over the baked-in pets of one frame ---- */
   const PetOverlay=(function(){
     const P=window.OVERCREEK_PETS, F=window.OVERCREEK_PET_FRAMES, NS='http://www.w3.org/2000/svg';
-    const CLIP={dog:0.62,cat:1};
+    const CLIP={dog:1,cat:1};
     function build(svg){
       const parts={};
       for(const key of ['dog','cat']){

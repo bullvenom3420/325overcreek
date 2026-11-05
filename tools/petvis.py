@@ -7,7 +7,7 @@ from PIL import Image
 import render, house
 FR = sys.argv[1]; N = 120
 W, H = 800, 520
-CLIP = {'dog': 0.62, 'cat': 1.0}           # animated part: top fraction of the sprite
+CLIP = {'dog': 1.0, 'cat': 1.0}           # animated part: top fraction of the sprite
 base = render.build_mesh(pets=False)
 tri0 = base[0]
 extra, ids = [], []
@@ -41,7 +41,7 @@ for i in range(N):
         facing = float(np.array(q['n']) @ (eye - np.array(q['o']))) > 0
         frac = seen / alone if alone else 0
         tl, tr, br, bl = [np.array(p) for p in meta[key]['corners']]
-        su, sv = (0.08, 0.04) if key == 'dog' else (0.94, 0.04)
+        su, sv = (0.5, 0.06) if key == 'dog' else (0.94, 0.04)
         p = tl + (tr - tl) * su + (bl - tl) * sv
         g = im[int(round(p[1])), int(round(p[0]))][:3].tolist()
         ok = bool(facing and alone > 30 and frac > 0.985)

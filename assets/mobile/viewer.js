@@ -70,7 +70,7 @@
     }
     if (PETS && model.pets) {
       const FPS = 10;
-      const specs = [['dog', 144, 240], ['cat', 168, 216]];   // texture size
+      const specs = [['dog', 240, 160], ['cat', 168, 216]];   // texture size
       Promise.all(specs.map(([key, w, h]) => {
         const n = Math.round(PETS[key].loop * FPS);
         return Promise.all(Array.from({ length: n }, (_, i) => frameTex(key, i / FPS, w, h))).then(tex => {

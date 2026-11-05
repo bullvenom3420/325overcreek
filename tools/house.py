@@ -223,7 +223,7 @@ def build():
     # ---- rear
     for c in (4.0, 7.67, 11.33):                                        # primary bedroom 3060s
         window('y', 59.67, R, c - 1.5, c + 1.5, FF + 2.0, FF + 8.0)
-    window('y', 42.25, R, 24.25, 36.25, FF, FF + 8.0, sill=False, mull=[27.25, 30.25, 33.25])  # slider
+    gs = window('y', 42.25, R, 24.25, 36.25, FF, FF + 8.0, sill=False, mull=[27.25, 30.25, 33.25])  # slider
     window('x', 38, F, 49.5, 52.5, FF, FF + 8.0, sill=False)            # garage side door
     window('y', 68.5, R, 40.4, 58.6, 0.15, FF + 7.5, sill=False,
            mull=[44.95, 49.5, 54.05])                                    # 18' garage door
@@ -243,10 +243,11 @@ def build():
     hiproof(36.8, 62.3, 42.4, 69.8, {'b': (eE, S8), 'l': (eE, S8), 'r': (eE, S8)})
 
     # ---- pet quads (sprites drawn behind the glass, baked into the frames)
-    # Huckleberry: standing on the window seat, front paws up on the glass of the
-    # second-floor window above the front door (front, centre)
-    PET_QUADS['dog'] = dict(o=(30.17, 5 - 0.085, F2 + 2.0), U=(3.0, 0, 0), V=(0, 0, 5.0), n=(0, -1, 0),
-                            fid=gd + 1, sprite='dog')
+    # Huckleberry: lying down side-on just inside the family room's sliding door, head turned
+    # to look out at the covered outdoor living area (rear, ground floor). Seen from outside, so
+    # the sprite's left edge sits at the larger x.
+    PET_QUADS['dog'] = dict(o=(33.17, 42.25 + 0.085, FF), U=(-2.84, 0, 0), V=(0, 0, 1.893), n=(0, 1, 0),
+                            fid=gs + 1, sprite='dog')
     # the cat: peeking around the jamb of the Bed 4 window, left side (seen only as the house turns)
     PET_QUADS['cat'] = dict(o=(2 - 0.085, 32.7, F2 + 0.9), U=(0, -3.5, 0), V=(0, 0, 4.5), n=(-1, 0, 0),
                             fid=gc + 1, sprite='cat')

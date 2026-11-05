@@ -15,11 +15,12 @@ js = r"""/* 325 Overcreek - Huckleberry and the cat: sprite markup and idle anim
   function keys(p, ks) { let k = 0; while (k < ks.length - 2 && ks[k + 1][0] <= p) k++; const [t0, a0] = ks[k], [t1, a1] = ks[k + 1]; return a0 + (a1 - a0) * ease((p - t0) / (t1 - t0)); }
   function blink(t, period, off) { const q = ((t + off) % period); return q < 0.07 ? 1 - q / 0.07 * 0.88 : q < 0.16 ? 0.12 + (q - 0.07) / 0.09 * 0.88 : 1; }
   const PETS = {
-    dog: { w: 60, h: 100, markup: DOGM,
+    dog: { w: 60, h: 40, markup: DOGM,
       state(t) {
-        const tilt = keys((t % 4.2) / 4.2, [[0, 0], [0.62, 0], [0.70, -9], [0.86, -9], [0.94, 0], [1, 0]]);
+        const tilt = keys((t % 4.2) / 4.2, [[0, 0], [0.62, 0], [0.70, -7], [0.86, -7], [0.94, 0], [1, 0]]);
         const s = blink(t, 2.8, 1.1);
-        return { 'dog-head': 'rotate(' + tilt.toFixed(2) + ' 30 46)', 'dog-eyes': 'translate(0 728.5) scale(1 ' + s.toFixed(3) + ') translate(0 -728.5)' };
+        const wag = 10 * Math.sin(t / 8.4 * 2 * Math.PI * 12);   /* 12 wags per loop, seamless */
+        return { 'dog-tail': 'rotate(' + wag.toFixed(2) + ' 50 25)', 'dog-head': 'rotate(' + tilt.toFixed(2) + ' 15.5 27)', 'dog-eyes': 'translate(0 728.5) scale(1 ' + s.toFixed(3) + ') translate(0 -728.5)' };
       } },
     cat: { w: 70, h: 90, markup: CATM,
       state(t) {
