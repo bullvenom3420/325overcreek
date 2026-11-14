@@ -405,9 +405,11 @@ def build():
     # ---- pet quads (sprites drawn just inside the glass, baked into the frames)
     # Huckleberry lies behind the front door's center glass; the cat peeks around the jamb of the
     # dining room's French doors. Both are seen from the street, where the intro ends.
-    PET_QUADS['dog'] = dict(o=(30.50, 6.17 - 0.085, FF), U=(2.35, 0, 0), V=(0, 0, 2.35 * 600 / 900), n=(0, -1, 0),
+    # True to life: Huckleberry is a 70 lb sheepadoodle (lying, about 3.3 ft long and 1.8 ft tall with his
+    # head up); the cat is a 12 lb Russian Blue (sitting, about 1 ft tall). The door's bars cross in front of him.
+    PET_QUADS['dog'] = dict(o=(29.97, 6.17 - 0.085, FF), U=(3.4, 0, 0), V=(0, 0, 3.4 * 600 / 900), n=(0, -1, 0),
                             fid=gfd + 1, sprite='dog')
-    PET_QUADS['cat'] = dict(o=(41.83, 5 - 0.085, FF), U=(3.5, 0, 0), V=(0, 0, 4.5), n=(0, -1, 0),
+    PET_QUADS['cat'] = dict(o=(41.83, 5 - 0.085, FF), U=(1.65 * 700 / 900, 0, 0), V=(0, 0, 1.65), n=(0, -1, 0),
                             fid=gdin + 1, sprite='cat')
     return list(faces)
 

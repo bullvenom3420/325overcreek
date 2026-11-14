@@ -15,7 +15,6 @@
   <meta property="og:image" content="https://325overcreek.com/assets/mobile/intro-mobile-poster.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SingleFamilyResidence","name":"325 Overcreek Drive","url":"https://325overcreek.com/","description":"New two-story home with five bedrooms, five and a half baths, a main-floor primary suite and a full-width two-story gallery porch.","address":{"@type":"PostalAddress","streetAddress":"325 Overcreek Drive","addressLocality":"Richardson","addressRegion":"TX","postalCode":"75080","addressCountry":"US"},"numberOfRooms":5,"numberOfBedrooms":5,"numberOfBathroomsTotal":5.5,"floorSize":{"@type":"QuantitativeValue","value":4630,"unitCode":"FTK"}}</script>
-  <link rel="preload" as="image" href="assets/frames/frame-000.webp" media="(min-width: 801px)">
   <link rel="preload" as="image" href="assets/mobile/intro-mobile-poster.jpg" media="(max-width: 800px)">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,7 +49,9 @@
     .m-3d,.m-loc{display:none}
 
     /* desktop scroll story */
-    .story{height:420vh;position:relative;overflow-anchor:none}
+    .story{height:100svh;min-height:500px;position:relative;overflow-anchor:none}
+    .story .info-fade,.story .scroll-cue,.story .disclaimer{transition:opacity .9s ease}
+    .story .scroll-cue{opacity:0}.story .disclaimer{opacity:0}
     .stage{height:100svh;min-height:500px;position:sticky;top:0;overflow:hidden;display:grid;place-items:center;background:radial-gradient(70% 62% at 50% 58%,#1d2820 0%,var(--night) 72%)}
     .model-stage{position:absolute;inset:0;display:flex;justify-content:center;align-items:center}
     .spin-image{position:absolute;left:50%;transform:translateX(-50%);top:7svh;width:min(100vw,1500px);height:76svh;max-height:780px;object-fit:contain;object-position:center;user-select:none;-webkit-user-drag:none}
@@ -224,16 +225,15 @@
 </header>
 
 <!-- DESKTOP: scroll to rotate -->
-<section class="story" id="intro" aria-label="Scroll to rotate a conceptual 3D massing model of the home">
+<section class="story" id="intro" aria-label="A conceptual 3D model of the home falls together and turns to face the street">
   <div class="stage">
-    <div class="model-stage" aria-label="A 120-frame conceptual massing model rotating 360 degrees">
-      <img class="spin-image" id="frameA" src="assets/frames/frame-000.webp" alt="Conceptual three-dimensional massing model of 325 Overcreek Drive" decoding="async" data-f="0">
+    <div class="model-stage">
+      <img class="spin-image" id="frameA" src="assets/build/build-000.webp" alt="Conceptual three-dimensional massing model of 325 Overcreek Drive" decoding="async" data-f="0">
       <canvas class="spin-image" id="buildCv" width="1600" height="1040" aria-hidden="true"></canvas>
       <svg class="spin-image pets-ov" id="petsDesk" viewBox="0 0 1600 1040" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
     </div>
     <div id="disclaimer" class="disclaimer">Conceptual rendering</div>
     <div class="info-fade" id="infoFade"><h1>Drawn to life.</h1><p>A home in the making</p></div>
-    <div class="progress" id="progress"><span id="degrees">000°</span><span id="frameCount">001 / 120</span></div>
     <div class="scroll-cue" id="scrollCue"><span>Scroll to explore</span><i aria-hidden="true"></i></div>
   </div>
 </section>
@@ -435,7 +435,7 @@
   /* ---- animated pet copies: drawn exactly over the baked-in pets of one frame ---- */
   const PetOverlay=(function(){
     const P=window.OVERCREEK_PETS, F=window.OVERCREEK_PET_FRAMES, NS='http://www.w3.org/2000/svg';
-    const CLIP={dog:1,cat:1}, CLIPX={dog:1,cat:.42};   /* the cat's live copy stays clear of the door's center bar */
+    const CLIP={dog:1,cat:1}, CLIPX={dog:1,cat:1};
     function build(svg){
       const parts={};
       for(const key of ['dog','cat']){
@@ -446,8 +446,9 @@
         inner.setAttribute('viewBox','0 0 '+P[key].w+' '+P[key].h); inner.setAttribute('width',P[key].w); inner.setAttribute('height',P[key].h); inner.setAttribute('overflow','hidden');
         inner.innerHTML=P[key].markup; m.appendChild(inner);
         const wrap=document.createElementNS(NS,'g'); wrap.setAttribute('clip-path','url(#'+cp.id+')'); wrap.appendChild(back); wrap.appendChild(m);
-        g.appendChild(cp); g.appendChild(wrap); svg.appendChild(g);
-        parts[key]={g,poly,back,m,inner};
+        const bars=document.createElementNS(NS,'g');            /* door bars that cross in front of the pet */
+        g.appendChild(cp); g.appendChild(wrap); g.appendChild(bars); svg.appendChild(g);
+        parts[key]={g,poly,back,m,inner,bars};
       }
       return parts;
     }
@@ -463,6 +464,7 @@
         p.poly.setAttribute('points',pts); p.back.setAttribute('points',pts); p.back.setAttribute('fill',d.g);
         const a=(tr[0]-tl[0])/w, b=(tr[1]-tl[1])/w, c=(bl[0]-tl[0])/h, e=(bl[1]-tl[1])/h;
         p.m.setAttribute('transform','matrix('+[a,b,c,e,tl[0],tl[1]].map(v=>v.toFixed(5)).join(' ')+')');
+        p.bars.innerHTML=(d.bars||[]).map(q=>'<polygon fill="'+q.f+'" points="'+q.p.map(v=>v[0]+','+v[1]).join(' ')+'"/>').join('');
         p.g.style.display=''; any=true;
       }
       return any;
@@ -476,82 +478,41 @@
     return { make(svg){ const parts=build(svg), anim=animate(svg,parts); return { show(i){ if(place(parts,i)) anim.on(); else anim.off(); }, hide(){ anim.off(); } }; } };
   })();
 
-  /* ---------------- desktop: scroll to rotate ---------------- */
+  /* ---------------- desktop: the house falls together once, like the phone intro ---------------- */
   (function(){
     const mq=matchMedia('(max-width: 800px)');
     const story=document.querySelector('.story');
-    const badge=document.getElementById('disclaimer'), progress=document.getElementById('progress'), cue=document.getElementById('scrollCue'), info=document.getElementById('infoFade');
+    const badge=document.getElementById('disclaimer'), cue=document.getElementById('scrollCue'), info=document.getElementById('infoFade');
     const img=document.getElementById('frameA'), mh=document.getElementById('masthead');
-    const degrees=document.getElementById('degrees'), count=document.getElementById('frameCount');
     const pets=PetOverlay.make(document.getElementById('petsDesk'));
     const dark=[story,document.getElementById('mModel'),document.querySelector('.footer')], band=document.getElementById('overview');
-    const N=120, frames=Array.from({length:N},(_,i)=>`assets/frames/frame-${String(i).padStart(3,'0')}.webp`);
-    const clamp=(x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
-    let pending=false, shown=-1, idle=0;
-    /* Intro: the house falls together (180 frames, 3 s at 60 fps), played once on load, ending exactly on
-       spin frame 0. It plays only once every frame is decoded, so it never stutters; if that takes too long,
-       or you start scrolling, it steps aside for the finished house. */
-    const NB=180, BFPS=60, bframes=Array.from({length:NB},(_,i)=>`assets/build/build-${String(i).padStart(3,'0')}.webp`);
-    const cv=document.getElementById('buildCv'), cx2=cv.getContext('2d'), bimgs=[];
-    let intro=(mq.matches||matchMedia('(prefers-reduced-motion: reduce)').matches||scrollY>story.offsetTop+40)?'done':'loading';
-    function finishIntro(){ if(intro==='done') return; intro='done'; img.style.visibility=''; cv.style.display='none';
-      badge.style.transition='opacity .7s ease'; setTimeout(()=>{badge.style.transition='';},800); onScroll(); }
-    function playIntro(){ if(intro!=='loading') return; intro='playing'; let s0=0;
-      const step=now=>{ if(intro!=='playing') return; if(!s0) s0=now;
-        const k=Math.min(NB-1,Math.floor((now-s0)/1000*BFPS)); cx2.clearRect(0,0,1600,1040); cx2.drawImage(bimgs[k],0,0,1600,1040);
-        if(k<NB-1) requestAnimationFrame(step); else setTimeout(finishIntro,60); };
-      requestAnimationFrame(step); }
-    if(intro==='loading'){
-      img.style.visibility='hidden'; badge.style.opacity=0;
-      let next=0, live=0, got=0;
-      const pump=()=>{ while(live<8 && next<NB){ const i=next++; live++;
-          const im=new Image(); im.decoding='async'; im.src=bframes[i]; bimgs[i]=im;
-          const p=im.decode?im.decode():new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});
-          p.then(()=>{ live--; if(++got===NB) playIntro(); else pump(); },()=>{ live--; finishIntro(); }); } };
-      pump();
-      setTimeout(()=>{ if(intro==='loading') finishIntro(); },9000);   /* slow connection: show the finished house */
-    } else cv.style.display='none';
-    /* Frames load in spin order, six at a time, and each one is decoded off the main thread before it
-       is ever put on screen. If the frame the scroll asks for isn't ready yet, the nearest ready frame
-       stands in, so the page never freezes waiting for a decode. */
-    const ready=new Uint8Array(N), cache=[]; let started=false, want=0;
-    function start(){ if(started) return; started=true; ready[0]=1;
-      let next=1, live=0;
-      const pump=()=>{ while(live<6 && next<N){ const i=next++; live++;
-          const im=new Image(); im.decoding='async'; im.src=frames[i]; cache[i]=im;
-          const p=im.decode?im.decode():new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});
-          p.then(()=>{ ready[i]=1; live--; if(i===want) show(want); pump(); },()=>{ live--; pump(); }); } };
-      pump(); }
-    function nearest(i){ if(ready[i]) return i; for(let d=1;d<N/2;d++){ const a=(i-d+N)%N, b=(i+d)%N; if(ready[a]) return a; if(ready[b]) return b; } return 0; }
-    function show(i){ want=i; const k=nearest(i); if(img.dataset.f!==String(k)){ img.src=frames[k]; img.dataset.f=String(k); } }
     const under=el=>{const r=el.getBoundingClientRect(); return r.top<=70 && r.bottom>70;};
-    function render(){
-      pending=false;
-      mh.classList.toggle('on-dark', dark.some(under)); mh.classList.toggle('on-band', under(band));
-      if(mq.matches) return;
-      const span=Math.max(1,story.offsetHeight-innerHeight);
-      const p=clamp((scrollY-story.offsetTop)/span);
-      if(intro!=='done'){ if(p>.03) finishIntro(); else { progress.style.opacity=0; cue.style.opacity=0; badge.style.opacity=0; return; } }
-      start();
-      badge.style.opacity=(1-clamp((p-.80)/.06)).toFixed(3);
-      progress.style.opacity=clamp((p-.03)/.05).toFixed(3);
-      info.style.opacity=clamp((p-.82)/.08).toFixed(3);
-      cue.style.opacity=(1-clamp(p/.05)).toFixed(3); cue.classList.toggle('gone',p>=.05);
-      const r=story.getBoundingClientRect(); if(r.bottom<0||r.top>innerHeight) return;
-      const t=clamp((p-.04)/.76);
-      const i=Math.round(t*N)%N;                 /* one sharp frame, never a blend */
-      if(i!==shown){ show(i); shown=i; }
-      degrees.textContent=String(Math.round(t*360)).padStart(3,'0')+'°';
-      count.textContent=String(i+1).padStart(3,'0')+' / '+N;
-    }
-    /* the animated pets switch off the instant scrolling starts and return only once it stops */
-    function onScroll(){
-      pets.hide(); clearTimeout(idle);
-      idle=setTimeout(()=>{ if(!mq.matches && intro==='done' && shown>=0 && img.dataset.f===String(shown) && img.complete && img.naturalWidth){ const r=story.getBoundingClientRect(); if(r.bottom>0 && r.top<innerHeight) pets.show(shown); } },160);
-      if(!pending){pending=true;requestAnimationFrame(render)}
-    }
-    addEventListener('scroll',onScroll,{passive:true}); addEventListener('resize',onScroll); addEventListener('load',()=>{render(); onScroll();});
-    render(); onScroll();
+    const masthead=()=>{ mh.classList.toggle('on-dark', dark.some(under)); mh.classList.toggle('on-band', under(band)); };
+    addEventListener('scroll',masthead,{passive:true}); masthead();
+    if(mq.matches) return;
+    /* 180 frames (3 s at 60 fps). It plays only once every frame is decoded, so it never stutters;
+       on a slow connection, or with reduced motion, the finished house simply appears. */
+    const N=180, FPS=60, frames=Array.from({length:N},(_,i)=>`assets/build/build-${String(i).padStart(3,'0')}.webp`);
+    const cv=document.getElementById('buildCv'), cx=cv.getContext('2d'), ims=[];
+    let state='loading';
+    function finish(){ if(state==='done') return; state='done';
+      img.src=frames[N-1]; img.style.visibility=''; cv.style.display='none';
+      info.style.opacity=1; cue.style.opacity=1; badge.style.opacity=1;
+      setTimeout(()=>pets.show(0),350); }
+    function play(){ if(state!=='loading') return; state='playing'; badge.style.opacity=1; let s0=0;
+      const step=now=>{ if(state!=='playing') return; if(!s0) s0=now;
+        const k=Math.min(N-1,Math.floor((now-s0)/1000*FPS)); cx.clearRect(0,0,1600,1040); cx.drawImage(ims[k],0,0,1600,1040);
+        if(k<N-1) requestAnimationFrame(step); else setTimeout(finish,60); };
+      requestAnimationFrame(step); }
+    img.style.visibility='hidden';
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches){ finish(); return; }
+    let next=0, live=0, got=0;
+    const pump=()=>{ while(live<8 && next<N){ const i=next++; live++;
+        const im=new Image(); im.decoding='async'; im.src=frames[i]; ims[i]=im;
+        const p=im.decode?im.decode():new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});
+        p.then(()=>{ live--; if(++got===N) play(); else pump(); },()=>{ live--; finish(); }); } };
+    pump();
+    setTimeout(()=>{ if(state==='loading') finish(); },9000);
   })();
 
   /* ---------------- phone: full-screen intro, plays once per page load ---------------- */
