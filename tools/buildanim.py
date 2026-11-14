@@ -17,6 +17,7 @@ if sys.argv[2] == '--encode':
                     sys.argv[3]], check=True)
     sys.exit()
 import render, house
+house.INTERIOR[0] = True
 
 # drop order: (group, start time s)
 DROPS = [('ff', 0.00), ('sf', 0.38), ('gallery', 0.80), ('rail', 1.10), ('beam', 1.32), ('roof', 1.58)]
@@ -46,6 +47,28 @@ mesh = render.build_mesh()
 tri, fid = mesh[0], mesh[1]
 names = [d[0] for d in DROPS]
 tg = np.array([names.index(fgroup[f - 1]) for f in fid])      # pet quads take their window's face id
+# pets for the intro: they move in once the house is finished, in ground-floor glass seen from the front
+# (upstairs, the balcony railing would hide them). Huckleberry lies behind the front door's center glass;
+# the cat peeks around the jamb of the dining room's French doors.
+def glass_at(x0, x1, z0, y):
+    for i, (pts, mat) in enumerate(geo):
+        P = np.array(pts)
+        if mat == 'glass' and abs(P[:, 1].mean() - y) < 0.02 and abs(P[:, 0].min() - x0) < 0.02 and abs(P[:, 0].max() - x1) < 0.02 and abs(P[:, 2].min() - z0) < 0.02:
+            return i + 1
+    raise SystemExit('window not found')
+house.PET_QUADS['dog'] = dict(o=(30.50, 6.17 - 0.085, house.FF), U=(2.35, 0, 0), V=(0, 0, 2.35 * 600 / 900), n=(0, -1, 0),
+                              fid=glass_at(29.17, 34.17, house.FF, 6.10), sprite='dog')
+house.PET_QUADS['cat'] = dict(o=(41.83, 5 - 0.085, house.FF), U=(3.5, 0, 0), V=(0, 0, 4.5), n=(0, -1, 0),
+                              fid=glass_at(41.83, 46.83, house.FF, 4.93), sprite='cat')
+house.geometry = lambda: geo                    # keep these pet spots (a rebuild would reset them)
+mesh = render.build_mesh()
+tri, fid = mesh[0], mesh[1]
+tg = np.array([names.index(fgroup[f - 1]) for f in fid])
+PET_IN = {'dog': (2.40, 2.70), 'cat': (2.55, 2.85)}    # fade-in window (s), after the last piece lands
+ELEV0, ELEV1 = 30.0, 11.0                               # camera starts looking down into the rooms
+def elev_at(t):
+    s = min(max(t / 2.55, 0.0), 1.0)
+    return ELEV1 + (ELEV0 - ELEV1) * (1 - ease(s))
 PET_O = {k: tuple(q['o']) for k, q in house.PET_QUADS.items()}
 PET_G = {k: names.index(fgroup[q['fid'] - 1]) for k, q in house.PET_QUADS.items()}
 
@@ -62,7 +85,9 @@ def shot(theta, t):
         o = PET_O[k]; house.PET_QUADS[k]['o'] = (o[0], o[1], o[2] + off[names[PET_G[k]]])
     if all(v > 60 for v in off.values()):        # nothing in view yet
         return np.zeros((H, W, 4))
-    im = render.render(theta, 1200, 780, mesh=m).crop((60, 0, 1140, 780))
+    for k, (a0, a1) in PET_IN.items():
+        render.PET_FADE[k] = ease(min(max((t - a0) / (a1 - a0), 0.0), 1.0))
+    im = render.render(theta, 1200, 780, elev=elev_at(t), mesh=m).crop((60, 0, 1140, 780))
     a = np.asarray(im).astype(float); rgb = a[..., :3]; al = a[..., 3:4] / 255
     lum = rgb.mean(-1, keepdims=True); al = np.where((lum < 90) & (al < 0.6), al * 0.25, al)
     return np.dstack([rgb * al, al])             # premultiplied

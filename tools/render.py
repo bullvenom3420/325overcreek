@@ -59,7 +59,7 @@ def triangulate(pts):
     return tris, nrm / (np.linalg.norm(nrm) + 1e-12)
 
 
-MATS = {'wall': 1.00, 'roof': 0.935, 'glass': 0.80, 'void': 0.55, 'trim': 1.02}
+MATS = {'floor': 0.90, 'wall': 1.00, 'roof': 0.935, 'glass': 0.80, 'void': 0.55, 'trim': 1.02}
 
 PET_KEYS = []
 SPRITES = {}
@@ -99,6 +99,7 @@ def build_mesh(pets=True):
 
 
 LAST_PETS = {}
+PET_FADE = {}     # per-pet opacity (build animation fades them in at the end)
 
 
 # ------------------------------------------------------------------ raster
@@ -245,7 +246,7 @@ def render(theta, W=1600, H=1000, ss=2, elev=11.0, dist=172.0, fov=27.0,
         sx_ = np.clip((uu * (Ww - 1)).astype(int), 0, Ww - 1)
         sy_ = np.clip((vv * (Hh - 1)).astype(int), 0, Hh - 1)
         px_ = sp[sy_, sx_]
-        a_ = px_[:, 3:4]
+        a_ = px_[:, 3:4] * PET_FADE.get(key, 1.0)
         glass_tint = np.array([0.80, 0.81, 0.84])
         prgb = px_[:, :3] * 0.94 + glass_tint * 0.06
         col[m] = prgb * a_ + col[m] * (1 - a_)

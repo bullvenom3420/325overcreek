@@ -97,6 +97,89 @@ def shutters(axis, at, out, u0, u1, z0, z1, w=1.35):
     panel(axis, at, out, u1 + 0.15, u1 + 0.15 + w, z0, z1, 'trim', d=0.12)
 
 
+# ------------------------------------------------------------------ hollow shells (build animation only)
+INTERIOR = [False]      # True: floors are hollow shells with rooms, so the build animation can look inside
+WALL_T = 0.8            # exterior wall thickness
+PART_T = 0.42           # interior partition thickness
+
+
+def _area(poly):
+    return 0.5 * sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
+                     for i in range(len(poly)))
+
+
+def inset(poly, d):
+    """Inset a rectilinear polygon by d (mitered corners)."""
+    ccw = _area(poly) > 0
+    n = len(poly)
+    lines = []
+    for i in range(n):
+        (xa, ya), (xb, yb) = poly[i], poly[(i + 1) % n]
+        dx, dy = xb - xa, yb - ya
+        L = (dx * dx + dy * dy) ** 0.5
+        nx, ny = (-dy / L, dx / L) if ccw else (dy / L, -dx / L)     # inward normal
+        lines.append(((xa + nx * d, ya + ny * d), (dx / L, dy / L)))
+    out = []
+    for i in range(n):
+        (p1, d1), (p2, d2) = lines[i - 1], lines[i]
+        den = d1[0] * d2[1] - d1[1] * d2[0]
+        t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den
+        out.append((p1[0] + d1[0] * t, p1[1] + d1[1] * t))
+    return out
+
+
+def shell(z0, z1, poly, floor_z, bottom=False, t=None):
+    """Exterior walls of thickness t around poly from z0 to z1, open on top, with a floor."""
+    t = WALL_T if t is None else t
+    inner = inset(poly, t)
+    n = len(poly)
+    for i in range(n):
+        (xa, ya), (xb, yb) = poly[i], poly[(i + 1) % n]
+        face([(xa, ya, z0), (xb, yb, z0), (xb, yb, z1), (xa, ya, z1)], 'wall')
+        (ia, ja), (ib, jb) = inner[i], inner[(i + 1) % n]
+        face([(ia, ja, floor_z), (ib, jb, floor_z), (ib, jb, z1), (ia, ja, z1)], 'wall')
+        face([(xa, ya, z1), (xb, yb, z1), (ib, jb, z1), (ia, ja, z1)], 'wall')
+        if bottom:
+            face([(xa, ya, z0), (xb, yb, z0), (ib, jb, z0), (ia, ja, z0)], 'wall')
+    face([(x, y, floor_z) for x, y in inner], 'floor')
+    return inner
+
+
+def partitions(walls, inner, z0, z1, t=None):
+    """Interior walls given as centerlines ('h', y, x0, x1) / ('v', x, y0, y1).
+    Ends within 1.6 ft of an exterior wall's inner face or another partition snap to it exactly,
+    so nothing overlaps (no coplanar tops to flicker)."""
+    t = PART_T if t is None else t
+    n = len(inner)
+    def stops(kind, at):
+        c = []
+        for i in range(n):
+            (xa, ya), (xb, yb) = inner[i], inner[(i + 1) % n]
+            if kind == 'h' and abs(xa - xb) < 1e-6 and min(ya, yb) <= at <= max(ya, yb):
+                c.append((xa, 0.0))
+            if kind == 'v' and abs(ya - yb) < 1e-6 and min(xa, xb) <= at <= max(xa, xb):
+                c.append((ya, 0.0))
+        for k2, at2, a2, b2 in walls:
+            if k2 != kind and min(a2, b2) - 0.5 <= at <= max(a2, b2) + 0.5:
+                c.append((at2, t / 2))
+        return c
+    def snap(v, cands, lo_end):
+        best = None
+        for c, half in cands:
+            target = c + half if lo_end else c - half
+            if abs(target - v) < 1.6 + half and (best is None or abs(target - v) < abs(best - v)):
+                best = target
+        return v if best is None else best
+    for kind, at, a, b in walls:
+        a, b = min(a, b), max(a, b)
+        cands = stops(kind, at)
+        a2, b2 = snap(a, cands, True), snap(b, cands, False)
+        if kind == 'h':
+            box(a2, b2, at - t / 2, at + t / 2, z0, z1)
+        else:
+            box(at - t / 2, at + t / 2, a2, b2, z0, z1)
+
+
 # ------------------------------------------------------------------ hip roofs
 def _clip(poly, a, b, c):
     """Keep the part of poly where a*x + b*y + c <= 0 (Sutherland-Hodgman)."""
@@ -170,14 +253,52 @@ def build():
           (36.17, 5), (52.67, 5), (52.67, 10.67), (61, 10.67), (61, 68.5), (38, 68.5),
           (38, 42.25), (22.5, 42.25), (22.5, 54.5), (17, 54.5), (17, 59.67), (0, 59.67),
           (0, 35.83), (2, 35.83)]
-    prism_z(0, P1, ff)
+    if INTERIOR[0]:
+        inner = shell(0, P1, ff, FF)
+        partitions([                                   # first floor, traced from the plan
+            ('h', 42.0, 0, 16.8),        # primary bedroom | primary bath
+            ('v', 14.4, 21.2, 42.0),     # primary bath / closets | family
+            ('h', 21.2, 2, 14.4),        # bath | closet
+            ('h', 16.4, 11.6, 26.0),     # study back
+            ('v', 26.0, 7.0, 16.4),      # study right | foyer (clear of the entry recess wall)
+            ('v', 37.25, 7.0, 20.4),     # foyer | dining (clear of the entry recess wall)
+            ('h', 20.4, 37.25, 52.1),    # dining back
+            ('v', 50.3, 20.4, 43.5),     # kitchen | mud, laundry, scullery
+            ('h', 25.0, 50.3, 61),       # laundry | scullery
+            ('h', 37.5, 50.3, 61),       # mud | laundry
+            ('h', 43.5, 38, 61),         # house | garage
+        ], inner, FF, P1)
+        box(38 + WALL_T, 61 - WALL_T, 43.5 + PART_T / 2, 68.5 - WALL_T, P1 - 0.25, P1)   # garage ceiling
+    else:
+        prism_z(0, P1, ff)
     setgroup('sf')
     # ---- second floor envelope (brick; Bed 5 block is siding)
     sf = [(2, 10.67), (10.67, 10.67), (10.67, 5), (52.67, 5), (52.67, 10.67), (61, 10.67),
           (61, 42.25), (39, 42.25), (39, 54.5), (16, 54.5), (16, 42.25), (2, 42.25)]
-    prism_z(P1, P2, sf, bottom=False)
-    # ceiling of the rear outdoor living porch (underside of Bed 5)
-    face([(22.5, 42.25, P1), (38, 42.25, P1), (38, 54.5, P1), (22.5, 54.5, P1)], 'wall')
+    if INTERIOR[0]:
+        inner = shell(P1, P2, sf, F2, bottom=True)
+        face([(x, y, P1) for x, y in inner], 'wall')   # underside of the second floor deck
+        partitions([                                   # second floor, traced from the plan
+            ('h', 27.75, 2, 16.7),       # Bed 4 | Bath 4
+            ('v', 16.7, 27.75, 42.25),   # Bed 4 | hall
+            ('v', 10.0, 10.5, 27.75),    # Bath 4, closet | loft
+            ('v', 19.1, 21.75, 39.75),   # game room left
+            ('v', 36.4, 21.75, 39.75),   # game room right
+            ('h', 21.75, 19.1, 36.4),    # game room | stair
+            ('h', 39.75, 16.7, 36.4),    # game room | hall to Bed 5
+            ('v', 47.0, 27.75, 42.25),   # attic storage | Bed 2
+            ('h', 27.75, 36.4, 61),      # Bed 2 | baths
+            ('h', 20.5, 36.4, 61),       # baths, closets | Bed 3
+            ('v', 47.2, 20.5, 27.75),    # Bath 2 | closet
+            ('v', 37.6, 5, 20.5),        # loft | Bed 3
+            ('v', 51.4, 12.0, 20.5),     # Bed 3 | Bath 3
+            ('v', 26.0, 43.5, 54.5),     # Bath 5, closet | Bed 5
+            ('h', 43.5, 16, 26.0),       # hall | Bath 5, closet
+        ], inner, F2, P2)
+    else:
+        prism_z(P1, P2, sf, bottom=False)
+        # ceiling of the rear outdoor living porch (underside of Bed 5)
+        face([(22.5, 42.25, P1), (38, 42.25, P1), (38, 54.5, P1), (22.5, 54.5, P1)], 'wall')
     box(22.5, 38, 54.1, 54.5, P1 - 0.9, P1, 'trim')          # beam at the open rear edge
 
     setgroup('ff')
