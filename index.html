@@ -494,23 +494,33 @@
        on a slow connection, or with reduced motion, the finished house simply appears. */
     const N=180, FPS=60, frames=Array.from({length:N},(_,i)=>`assets/build/build-${String(i).padStart(3,'0')}.webp`);
     const cv=document.getElementById('buildCv'), cx=cv.getContext('2d'), ims=[];
-    let state='loading';
+    let state='loading', got=0;
+    /* Playback starts as soon as the frames still to come will arrive before they are needed (measured
+       live from this connection), instead of waiting for all of them; if one is ever late, it holds. */
+    const ready=new Uint8Array(N), t0=performance.now();
+    const contiguous=()=>{ let c=0; while(c<N && ready[c]) c++; return c; };
+    function canStart(){ const c=contiguous(); if(c>=N) return true; if(c<12) return false;
+      const rate=got/Math.max(0.05,(performance.now()-t0)/1000);
+      return rate*(N/FPS) >= 1.35*(N-c); }
     function finish(){ if(state==='done') return; state='done';
       img.src=frames[N-1]; img.style.visibility=''; cv.style.display='none';
       info.style.opacity=1; cue.style.opacity=1; badge.style.opacity=1;
       setTimeout(()=>pets.show(0),350); }
-    function play(){ if(state!=='loading') return; state='playing'; badge.style.opacity=1; let s0=0;
-      const step=now=>{ if(state!=='playing') return; if(!s0) s0=now;
-        const k=Math.min(N-1,Math.floor((now-s0)/1000*FPS)); cx.clearRect(0,0,1600,1040); cx.drawImage(ims[k],0,0,1600,1040);
-        if(k<N-1) requestAnimationFrame(step); else setTimeout(finish,60); };
+    function play(){ if(state!=='loading') return; state='playing'; badge.style.opacity=1; let s0=0, prev=0, last=-1;
+      const step=now=>{ if(state!=='playing') return; if(!s0){ s0=now; prev=now; }
+        let k=Math.min(N-1,Math.floor((now-s0)/1000*FPS));
+        if(!ready[k]){ s0+=now-prev; k=Math.max(last,0); }
+        prev=now;
+        if(k!==last && ready[k]){ cx.clearRect(0,0,1600,1040); cx.drawImage(ims[k],0,0,1600,1040); last=k; }
+        if(last<N-1) requestAnimationFrame(step); else setTimeout(finish,60); };
       requestAnimationFrame(step); }
     img.style.visibility='hidden';
     if(matchMedia('(prefers-reduced-motion: reduce)').matches){ finish(); return; }
-    let next=0, live=0, got=0;
+    let next=0, live=0;
     const pump=()=>{ while(live<8 && next<N){ const i=next++; live++;
         const im=new Image(); im.decoding='async'; im.src=frames[i]; ims[i]=im;
         const p=im.decode?im.decode():new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});
-        p.then(()=>{ live--; if(++got===N) play(); else pump(); },()=>{ live--; finish(); }); } };
+        p.then(()=>{ live--; ready[i]=1; got++; if(state==='loading' && canStart()) play(); pump(); },()=>{ live--; finish(); }); } };
     pump();
     setTimeout(()=>{ if(state==='loading') finish(); },9000);
   })();
