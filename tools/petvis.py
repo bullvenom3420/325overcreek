@@ -8,13 +8,14 @@ import render, house
 FR = sys.argv[1]; N = 120
 W, H = 800, 520
 CLIP = {'dog': 1.0, 'cat': 1.0}           # animated part: top fraction of the sprite
+CLIPX = {'dog': 1.0, 'cat': 0.42}         # ...and left fraction (the cat sits by the jamb, clear of the door's center bar)
 base = render.build_mesh(pets=False)
 tri0 = base[0]
 extra, ids = [], []
 for k, key in enumerate(house.PET_QUADS):
     q = house.PET_QUADS[key]; o, U, V = (np.array(q[a], float) for a in 'oUV')
-    c = CLIP[key]; lo = o + V * (1 - c)
-    pts = [lo, lo + U, o + U + V, o + V]
+    c = CLIP[key]; lo = o + V * (1 - c); Ux = U * CLIPX[key]
+    pts = [lo, lo + Ux, o + Ux + V, o + V]
     n = np.array(q['n']) * 0.004                 # a hair in front of the sprite plane
     for t in ((0, 1, 2), (0, 2, 3)):
         extra.append([pts[t[0]] + n, pts[t[1]] + n, pts[t[2]] + n]); ids.append(k + 1)
@@ -41,7 +42,7 @@ for i in range(N):
         facing = float(np.array(q['n']) @ (eye - np.array(q['o']))) > 0
         frac = seen / alone if alone else 0
         tl, tr, br, bl = [np.array(p) for p in meta[key]['corners']]
-        su, sv = (0.5, 0.06) if key == 'dog' else (0.94, 0.04)
+        su, sv = (0.5, 0.06) if key == 'dog' else (0.30, 0.04)
         p = tl + (tr - tl) * su + (bl - tl) * sv
         g = im[int(round(p[1])), int(round(p[0]))][:3].tolist()
         ok = bool(facing and alone > 30 and frac > 0.985)

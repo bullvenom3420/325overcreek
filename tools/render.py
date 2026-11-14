@@ -153,7 +153,10 @@ def camera(theta_deg, elev_deg, dist):
 
 
 def render(theta, W=1600, H=1000, ss=2, elev=11.0, dist=172.0, fov=27.0,
-           mesh=None, line_rgb=(58, 57, 54), wall_rgb=(246, 244, 239)):
+           mesh=None, line_rgb=(58, 57, 54), wall_rgb=(246, 244, 239), shadow_classes=None):
+    """shadow_classes: optional (class index per triangle, weight per class). A class with weight w
+    darkens other surfaces by w of its full shadow (pieces still in the air cast faint shadows that
+    firm up as they land); a surface is always fully shadowed by its own class."""
     tri, fid, nrm, alb, pid = mesh
     Ws, Hs = W * ss, H * ss
     eye, f, r, u = camera(theta, elev, dist)
@@ -192,19 +195,33 @@ def render(theta, W=1600, H=1000, ss=2, elev=11.0, dist=172.0, fov=27.0,
         q = p - CENTER
         return (SM / 2 + (q @ lr) / ext * SM / 2, SM / 2 - (q @ lu) / ext * SM / 2, q @ lf)
     lx, ly, ld = lproj(tri)
-    sdb, _ = raster(lx, ly, ld, SM, SM, np.arange(len(tri)), False)
+    if shadow_classes is None:
+        tcls, wts = np.zeros(len(tri), int), [1.0]
+    else:
+        tcls, wts = shadow_classes
+    maps = []
+    for c, w in enumerate(wts):
+        sel = np.where(tcls == c)[0]
+        if w <= 0 or not len(sel):
+            continue
+        sdb_c, _ = raster(lx[sel], ly[sel], ld[sel], SM, SM, np.arange(len(sel)), False)
+        maps.append((c, w, sdb_c))
 
-    def shadow_at(points, bias=0.25, soft=2):
+    def shadow_at(points, bias=0.25, soft=2, pcls=None):
         qx, qy, qd = lproj(points)
-        acc = np.zeros(qx.shape)
-        cnt = 0
-        for ox in range(-soft, soft + 1):
-            for oy in range(-soft, soft + 1):
-                ix = np.clip((qx + ox * 2.0).astype(int), 0, SM - 1)
-                iy = np.clip((qy + oy * 2.0).astype(int), 0, SM - 1)
-                acc += (qd - bias <= sdb[iy, ix])
-                cnt += 1
-        return acc / cnt
+        lit = np.ones(qx.shape)
+        for c, w, sdb_c in maps:
+            acc = np.zeros(qx.shape)
+            cnt = 0
+            for ox in range(-soft, soft + 1):
+                for oy in range(-soft, soft + 1):
+                    ix = np.clip((qx + ox * 2.0).astype(int), 0, SM - 1)
+                    iy = np.clip((qy + oy * 2.0).astype(int), 0, SM - 1)
+                    acc += (qd - bias <= sdb_c[iy, ix])
+                    cnt += 1
+            ww = w if pcls is None else np.where(pcls == c, 1.0, w)
+            lit *= 1 - ww * (1 - acc / cnt)
+        return lit
 
     # ---- shading
     N = nrm[np.where(hit, ib, 0)]
@@ -213,7 +230,7 @@ def render(theta, W=1600, H=1000, ss=2, elev=11.0, dist=172.0, fov=27.0,
     ndl = np.clip(N @ L, 0, None)
     sh = np.ones((Hs, Ws))
     hp = wpos[hit]
-    sh[hit] = shadow_at(hp, soft=3)
+    sh[hit] = shadow_at(hp, soft=3, pcls=tcls[ib[hit]])
     a = alb[np.where(hit, ib, 0)]
     amb = 0.70 + 0.10 * N[..., 2] + 0.06 * (N @ (-f))
     lum = a * (amb + 0.30 * ndl * (0.35 + 0.65 * sh))

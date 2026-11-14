@@ -145,11 +145,12 @@ def shell(z0, z1, poly, floor_z, bottom=False, t=None):
     return inner
 
 
-def partitions(walls, inner, z0, z1, t=None):
+def partitions(walls, inner, z0, z1, t=None, door_top=None):
     """Interior walls given as centerlines ('h', y, x0, x1) / ('v', x, y0, y1).
     Ends within 1.6 ft of an exterior wall's inner face or another partition snap to it exactly,
     so nothing overlaps (no coplanar tops to flicker)."""
     t = PART_T if t is None else t
+    door_top = z0 + 8.0 if door_top is None else door_top
     n = len(inner)
     def stops(kind, at):
         c = []
@@ -159,7 +160,8 @@ def partitions(walls, inner, z0, z1, t=None):
                 c.append((xa, 0.0))
             if kind == 'v' and abs(ya - yb) < 1e-6 and min(xa, xb) <= at <= max(xa, xb):
                 c.append((ya, 0.0))
-        for k2, at2, a2, b2 in walls:
+        for w2 in walls:
+            k2, at2, a2, b2 = w2[:4]
             if k2 != kind and min(a2, b2) - 0.5 <= at <= max(a2, b2) + 0.5:
                 c.append((at2, t / 2))
         return c
@@ -170,14 +172,26 @@ def partitions(walls, inner, z0, z1, t=None):
             if abs(target - v) < 1.6 + half and (best is None or abs(target - v) < abs(best - v)):
                 best = target
         return v if best is None else best
-    for kind, at, a, b in walls:
+    def piece(kind, at, u0, u1, za, zb):
+        if u1 - u0 < 1e-3:
+            return
+        if kind == 'h':
+            box(u0, u1, at - t / 2, at + t / 2, za, zb)
+        else:
+            box(at - t / 2, at + t / 2, u0, u1, za, zb)
+    for w in walls:
+        kind, at, a, b = w[:4]
+        doors = sorted(w[4]) if len(w) > 4 else []
         a, b = min(a, b), max(a, b)
         cands = stops(kind, at)
         a2, b2 = snap(a, cands, True), snap(b, cands, False)
-        if kind == 'h':
-            box(a2, b2, at - t / 2, at + t / 2, z0, z1)
-        else:
-            box(at - t / 2, at + t / 2, a2, b2, z0, z1)
+        u = a2
+        for c, wd in doors:                       # door openings: wall stops, header spans above
+            d0, d1 = max(c - wd / 2, a2), min(c + wd / 2, b2)
+            piece(kind, at, u, d0, z0, z1)
+            piece(kind, at, d0, d1, door_top, z1)
+            u = d1
+        piece(kind, at, u, b2, z0, z1)
 
 
 # ------------------------------------------------------------------ hip roofs
@@ -255,20 +269,25 @@ def build():
           (0, 35.83), (2, 35.83)]
     if INTERIOR[0]:
         inner = shell(0, P1, ff, FF)
-        partitions([                                   # first floor, traced from the plan
-            ('h', 42.0, 0, 16.8),        # primary bedroom | primary bath
-            ('v', 14.4, 21.2, 42.0),     # primary bath / closets | family
-            ('h', 21.2, 2, 14.4),        # bath | closet
-            ('h', 16.4, 11.6, 26.0),     # study back
-            ('v', 26.0, 7.0, 16.4),      # study right | foyer (clear of the entry recess wall)
-            ('v', 37.25, 7.0, 20.4),     # foyer | dining (clear of the entry recess wall)
-            ('h', 20.4, 37.25, 52.1),    # dining back
-            ('v', 50.3, 20.4, 43.5),     # kitchen | mud, laundry, scullery
-            ('h', 25.0, 50.3, 61),       # laundry | scullery
-            ('h', 37.5, 50.3, 61),       # mud | laundry
-            ('h', 43.5, 38, 61),         # house | garage
+        partitions([                                   # first floor, traced from the plan; (center, width) doors
+            ('h', 42.0, 0, 16.6, [(9.4, 4.0), (15.2, 2.8)]),      # primary bedroom | bath, hall
+            ('v', 16.6, 42.0, 54.5),                              # primary bedroom | powder, hall
+            ('v', 14.4, 21.2, 42.0),                              # primary bath, closets | family
+            ('h', 21.2, 2, 14.4, [(5.2, 2.5)]),                   # bath | closet
+            ('v', 10.9, 11.5, 21.2),                              # closet | study
+            ('h', 16.4, 10.9, 26.0),                              # study back
+            ('v', 26.0, 7.0, 16.4, [(13.3, 4.0)]),                # study | foyer (French doors)
+            ('v', 37.25, 7.0, 20.4, [(12.5, 5.0)]),               # foyer | dining (cased opening)
+            ('h', 20.4, 37.25, 52.08, [(44.5, 6.0)]),             # dining | kitchen (cased opening)
+            ('v', 52.08, 11.5, 20.4),                             # dining | scullery
+            ('v', 50.3, 20.4, 43.5, [(22.6, 2.8), (31.5, 2.8), (41.0, 2.8)]),   # kitchen | scullery, laundry, mud
+            ('h', 25.0, 50.3, 61, [(56.0, 2.8)]),                 # scullery | laundry
+            ('h', 37.5, 50.3, 61, [(55.5, 2.8)]),                 # laundry | mud
+            ('h', 43.5, 38, 61, [(55.8, 2.8)]),                   # mud | garage
         ], inner, FF, P1)
+        setgroup('gceil')
         box(38 + WALL_T, 61 - WALL_T, 43.5 + PART_T / 2, 68.5 - WALL_T, P1 - 0.25, P1)   # garage ceiling
+        setgroup('ff')
     else:
         prism_z(0, P1, ff)
     setgroup('sf')
@@ -278,23 +297,23 @@ def build():
     if INTERIOR[0]:
         inner = shell(P1, P2, sf, F2, bottom=True)
         face([(x, y, P1) for x, y in inner], 'wall')   # underside of the second floor deck
-        partitions([                                   # second floor, traced from the plan
-            ('h', 27.75, 2, 16.7),       # Bed 4 | Bath 4
-            ('v', 16.7, 27.75, 42.25),   # Bed 4 | hall
-            ('v', 10.0, 10.5, 27.75),    # Bath 4, closet | loft
-            ('v', 19.1, 21.75, 39.75),   # game room left
-            ('v', 36.4, 21.75, 39.75),   # game room right
-            ('h', 21.75, 19.1, 36.4),    # game room | stair
-            ('h', 39.75, 16.7, 36.4),    # game room | hall to Bed 5
-            ('v', 47.0, 27.75, 42.25),   # attic storage | Bed 2
-            ('h', 27.75, 36.4, 61),      # Bed 2 | baths
-            ('h', 20.5, 36.4, 61),       # baths, closets | Bed 3
-            ('v', 47.2, 20.5, 27.75),    # Bath 2 | closet
-            ('v', 37.6, 5, 20.5),        # loft | Bed 3
-            ('v', 51.4, 12.0, 20.5),     # Bed 3 | Bath 3
-            ('v', 26.0, 43.5, 54.5),     # Bath 5, closet | Bed 5
-            ('h', 43.5, 16, 26.0),       # hall | Bath 5, closet
-        ], inner, F2, P2)
+        partitions([                                   # second floor, traced from the plan; (center, width) doors
+            ('h', 27.75, 2, 16.7, [(6.8, 2.5)]),                  # Bed 4 | Bath 4
+            ('v', 16.7, 27.75, 42.25, [(29.8, 2.8)]),             # Bed 4 | hall
+            ('v', 10.0, 10.5, 27.75, [(16.0, 2.5)]),              # Bath 4, closet | loft
+            ('v', 19.1, 21.75, 39.75, [(37.0, 3.0)]),             # game room left
+            ('v', 36.4, 21.75, 39.75, [(30.5, 2.8)]),             # game room right
+            ('h', 21.75, 19.1, 36.4, [(27.75, 9.0)]),             # game room | stair (wide opening)
+            ('h', 39.75, 16.7, 36.4, [(20.8, 2.8)]),              # game room | hall to Bed 5
+            ('v', 47.0, 27.75, 42.25, [(30.5, 2.8)]),             # attic storage | Bed 2
+            ('h', 27.75, 36.4, 61, [(52.0, 2.5)]),                # Bed 2 | baths
+            ('h', 20.5, 36.4, 61, [(44.0, 2.5)]),                 # baths, closets | Bed 3
+            ('v', 47.2, 20.5, 27.75, [(24.0, 2.5)]),              # Bath 2 | closet
+            ('v', 37.6, 5, 20.5, [(9.5, 2.8)]),                   # loft | Bed 3
+            ('v', 52.08, 11.5, 20.5, [(16.0, 2.5)]),              # Bed 3 | Bath 3
+            ('v', 26.0, 43.5, 54.5, [(50.5, 2.5)]),               # Bath 5, closet | Bed 5
+            ('h', 43.5, 16, 39, [(21.0, 2.5), (28.0, 2.8)]),      # hall | Bath 5, closet, Bed 5
+        ], inner, F2, P2, door_top=F2 + 7.0)
     else:
         prism_z(P1, P2, sf, bottom=False)
         # ceiling of the rear outdoor living porch (underside of Bed 5)
@@ -332,11 +351,13 @@ def build():
     setgroup('open')
     # ---- openings: front (y = 5, under the gallery)
     for u0, u1 in ((16.5, 21.5), (41.83, 46.83)):                 # study / dining French doors
-        window('y', 5, F, u0, u1, FF, FF + 8.3, sill=False, mull=[(u0 + u1) / 2])
+        k_ = window('y', 5, F, u0, u1, FF, FF + 8.3, sill=False, mull=[(u0 + u1) / 2])
+        if u0 > 40:
+            gdin = k_
         shutters('y', 5, F, u0, u1, FF, FF + 8.3)
         window('y', 5, F, u0, u1, F2, F2 + 6.67, sill=False, mull=[(u0 + u1) / 2])  # loft / Bed 3
         shutters('y', 5, F, u0, u1, F2, F2 + 6.67)
-    window('y', 6.17, F, 29.17, 34.17, FF, FF + 8.3, sill=False, mull=[30.4, 32.94])  # front door + sidelights
+    gfd = window('y', 6.17, F, 29.17, 34.17, FF, FF + 8.3, sill=False, mull=[30.4, 32.94])  # front door + sidelights
     gd = window('y', 5, F, 30.17, 33.17, F2 + 2.0, F2 + 7.0)            # 3050 above entry (bench seat)
     shutters('y', 5, F, 30.17, 33.17, F2 + 2.0, F2 + 7.0, w=1.2)
     # wings (y = 10.67)
@@ -381,15 +402,13 @@ def build():
     eE = 10.08 - 1.3 * S8
     hiproof(36.8, 62.3, 42.4, 69.8, {'b': (eE, S8), 'l': (eE, S8), 'r': (eE, S8)})
 
-    # ---- pet quads (sprites drawn behind the glass, baked into the frames)
-    # Huckleberry: lying down side-on just inside the family room's sliding door, head turned
-    # to look out at the covered outdoor living area (rear, ground floor). Seen from outside, so
-    # the sprite's left edge sits at the larger x.
-    PET_QUADS['dog'] = dict(o=(33.17, 42.25 + 0.085, FF), U=(-2.84, 0, 0), V=(0, 0, 1.893), n=(0, 1, 0),
-                            fid=gs + 1, sprite='dog')
-    # the cat: peeking around the jamb of the Bed 4 window, left side (seen only as the house turns)
-    PET_QUADS['cat'] = dict(o=(2 - 0.085, 32.7, F2 + 0.9), U=(0, -3.5, 0), V=(0, 0, 4.5), n=(-1, 0, 0),
-                            fid=gc + 1, sprite='cat')
+    # ---- pet quads (sprites drawn just inside the glass, baked into the frames)
+    # Huckleberry lies behind the front door's center glass; the cat peeks around the jamb of the
+    # dining room's French doors. Both are seen from the street, where the intro ends.
+    PET_QUADS['dog'] = dict(o=(30.50, 6.17 - 0.085, FF), U=(2.35, 0, 0), V=(0, 0, 2.35 * 600 / 900), n=(0, -1, 0),
+                            fid=gfd + 1, sprite='dog')
+    PET_QUADS['cat'] = dict(o=(41.83, 5 - 0.085, FF), U=(3.5, 0, 0), V=(0, 0, 4.5), n=(0, -1, 0),
+                            fid=gdin + 1, sprite='cat')
     return list(faces)
 
 

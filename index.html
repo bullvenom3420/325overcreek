@@ -155,6 +155,12 @@
     .m-viewer{position:relative;height:min(62vh,640px);max-width:1240px;margin:28px auto 12px;touch-action:pan-y;background:radial-gradient(55% 55% at 50% 62%,var(--night-2),var(--night) 100%)}
     .m-viewer canvas{display:block;width:100%;height:100%;touch-action:pan-y}
     .m-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .6s;pointer-events:none}
+    .floor-tabs{display:inline-flex;gap:2px;margin:30px auto 0;padding:3px;border:1px solid rgba(239,238,228,.18);border-radius:999px;background:rgba(239,238,228,.03)}
+    .floor-tabs button{appearance:none;border:0;border-radius:999px;background:transparent;color:var(--night-muted);font:500 10.5px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:background .35s ease,color .35s ease}
+    .floor-tabs button:hover{color:var(--night-ink)}
+    .floor-tabs button[aria-selected="true"]{background:var(--night-ink);color:var(--night)}
+    .floor-tabs button:focus-visible{outline:1px solid var(--night-ink);outline-offset:2px}
+    .floor-tabs:not(.ready) button{pointer-events:none;opacity:.55}
     .m-hint{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--night-muted);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .6s}
     .m-hint svg{width:22px;height:12px}
     .hint-touch{display:none}
@@ -202,7 +208,8 @@
       .hero-cap{font-size:10px;padding:10px 20px 18px}
       .tabs{width:100%}.tabs button{flex:1;justify-content:center;padding:13px 10px}.tabs button small{display:none}
       .m-model{padding:72px 0 28px}.m-model h2{font-size:38px}
-      .m-viewer{height:min(78vw,440px);margin:18px 0 8px}
+      .m-viewer{height:min(78vw,440px);margin:14px 0 8px}
+      .floor-tabs{margin-top:22px}.floor-tabs button{padding:10px 12px;font-size:9.5px;letter-spacing:.16em}
       .call{flex-direction:column;align-items:flex-start}
     }
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.scroll-cue i::after{animation:none}}
@@ -221,6 +228,7 @@
   <div class="stage">
     <div class="model-stage" aria-label="A 120-frame conceptual massing model rotating 360 degrees">
       <img class="spin-image" id="frameA" src="assets/frames/frame-000.webp" alt="Conceptual three-dimensional massing model of 325 Overcreek Drive" decoding="async" data-f="0">
+      <canvas class="spin-image" id="buildCv" width="1600" height="1040" aria-hidden="true"></canvas>
       <svg class="spin-image pets-ov" id="petsDesk" viewBox="0 0 1600 1040" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
     </div>
     <div id="disclaimer" class="disclaimer">Conceptual rendering</div>
@@ -388,7 +396,12 @@
 <section class="m-model" id="mModel" aria-label="Interactive 3D massing model">
   <div class="label">3D model</div>
   <h2>The house in 3D.</h2>
-  <p class="lede"><span class="hint-mouse">Drag sideways</span><span class="hint-touch">Swipe sideways</span> to walk around the house. <span class="hint-mouse">Click</span><span class="hint-touch">Tap</span> any spot to zoom in on it.</p>
+  <p class="lede"><span class="hint-mouse">Drag sideways</span><span class="hint-touch">Swipe sideways</span> to walk around the house. <span class="hint-mouse">Click</span><span class="hint-touch">Tap</span> any spot to zoom in on it. Choose a floor to look down into its rooms.</p>
+  <div class="floor-tabs" id="floorTabs" role="tablist" aria-label="View of the model">
+    <button type="button" role="tab" aria-selected="true" data-view="ext">Exterior</button>
+    <button type="button" role="tab" aria-selected="false" data-view="f1">First floor</button>
+    <button type="button" role="tab" aria-selected="false" data-view="f2">Second floor</button>
+  </div>
   <div class="m-viewer" id="mViewer">
     <img width="1080" height="780" class="m-poster" id="mPoster" src="assets/mobile/intro-mobile-poster.jpg" alt="" aria-hidden="true" loading="lazy">
   </div>
@@ -422,7 +435,7 @@
   /* ---- animated pet copies: drawn exactly over the baked-in pets of one frame ---- */
   const PetOverlay=(function(){
     const P=window.OVERCREEK_PETS, F=window.OVERCREEK_PET_FRAMES, NS='http://www.w3.org/2000/svg';
-    const CLIP={dog:1,cat:1};
+    const CLIP={dog:1,cat:1}, CLIPX={dog:1,cat:.42};   /* the cat's live copy stays clear of the door's center bar */
     function build(svg){
       const parts={};
       for(const key of ['dog','cat']){
@@ -443,9 +456,10 @@
       for(const key in parts){
         const d=F[i]&&F[i][key], p=parts[key];
         if(!d||!d.on){ p.g.style.display='none'; continue; }
-        const [tl,tr,br,bl]=d.c, k=CLIP[key], w=P[key].w, h=P[key].h;
-        const lo=[tl[0]+(bl[0]-tl[0])*k, tl[1]+(bl[1]-tl[1])*k], lo2=[tr[0]+(br[0]-tr[0])*k, tr[1]+(br[1]-tr[1])*k];
-        const pts=[tl,tr,lo2,lo].map(q=>q[0].toFixed(2)+','+q[1].toFixed(2)).join(' ');
+        const [tl,tr,br,bl]=d.c, k=CLIP[key], kx=CLIPX[key], w=P[key].w, h=P[key].h;
+        const L=(a,b,f)=>[a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f];
+        const tr2=L(tl,tr,kx), br2=L(bl,br,kx), lo=L(tl,bl,k), lo2=L(tr2,br2,k);
+        const pts=[tl,tr2,lo2,lo].map(q=>q[0].toFixed(2)+','+q[1].toFixed(2)).join(' ');
         p.poly.setAttribute('points',pts); p.back.setAttribute('points',pts); p.back.setAttribute('fill',d.g);
         const a=(tr[0]-tl[0])/w, b=(tr[1]-tl[1])/w, c=(bl[0]-tl[0])/h, e=(bl[1]-tl[1])/h;
         p.m.setAttribute('transform','matrix('+[a,b,c,e,tl[0],tl[1]].map(v=>v.toFixed(5)).join(' ')+')');
@@ -474,6 +488,29 @@
     const N=120, frames=Array.from({length:N},(_,i)=>`assets/frames/frame-${String(i).padStart(3,'0')}.webp`);
     const clamp=(x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
     let pending=false, shown=-1, idle=0;
+    /* Intro: the house falls together (180 frames, 3 s at 60 fps), played once on load, ending exactly on
+       spin frame 0. It plays only once every frame is decoded, so it never stutters; if that takes too long,
+       or you start scrolling, it steps aside for the finished house. */
+    const NB=180, BFPS=60, bframes=Array.from({length:NB},(_,i)=>`assets/build/build-${String(i).padStart(3,'0')}.webp`);
+    const cv=document.getElementById('buildCv'), cx2=cv.getContext('2d'), bimgs=[];
+    let intro=(mq.matches||matchMedia('(prefers-reduced-motion: reduce)').matches||scrollY>story.offsetTop+40)?'done':'loading';
+    function finishIntro(){ if(intro==='done') return; intro='done'; img.style.visibility=''; cv.style.display='none';
+      badge.style.transition='opacity .7s ease'; setTimeout(()=>{badge.style.transition='';},800); onScroll(); }
+    function playIntro(){ if(intro!=='loading') return; intro='playing'; let s0=0;
+      const step=now=>{ if(intro!=='playing') return; if(!s0) s0=now;
+        const k=Math.min(NB-1,Math.floor((now-s0)/1000*BFPS)); cx2.clearRect(0,0,1600,1040); cx2.drawImage(bimgs[k],0,0,1600,1040);
+        if(k<NB-1) requestAnimationFrame(step); else setTimeout(finishIntro,60); };
+      requestAnimationFrame(step); }
+    if(intro==='loading'){
+      img.style.visibility='hidden'; badge.style.opacity=0;
+      let next=0, live=0, got=0;
+      const pump=()=>{ while(live<8 && next<NB){ const i=next++; live++;
+          const im=new Image(); im.decoding='async'; im.src=bframes[i]; bimgs[i]=im;
+          const p=im.decode?im.decode():new Promise((ok,no)=>{im.onload=ok;im.onerror=no;});
+          p.then(()=>{ live--; if(++got===NB) playIntro(); else pump(); },()=>{ live--; finishIntro(); }); } };
+      pump();
+      setTimeout(()=>{ if(intro==='loading') finishIntro(); },9000);   /* slow connection: show the finished house */
+    } else cv.style.display='none';
     /* Frames load in spin order, six at a time, and each one is decoded off the main thread before it
        is ever put on screen. If the frame the scroll asks for isn't ready yet, the nearest ready frame
        stands in, so the page never freezes waiting for a decode. */
@@ -492,9 +529,10 @@
       pending=false;
       mh.classList.toggle('on-dark', dark.some(under)); mh.classList.toggle('on-band', under(band));
       if(mq.matches) return;
-      start();
       const span=Math.max(1,story.offsetHeight-innerHeight);
       const p=clamp((scrollY-story.offsetTop)/span);
+      if(intro!=='done'){ if(p>.03) finishIntro(); else { progress.style.opacity=0; cue.style.opacity=0; badge.style.opacity=0; return; } }
+      start();
       badge.style.opacity=(1-clamp((p-.80)/.06)).toFixed(3);
       progress.style.opacity=clamp((p-.03)/.05).toFixed(3);
       info.style.opacity=clamp((p-.82)/.08).toFixed(3);
@@ -509,7 +547,7 @@
     /* the animated pets switch off the instant scrolling starts and return only once it stops */
     function onScroll(){
       pets.hide(); clearTimeout(idle);
-      idle=setTimeout(()=>{ if(!mq.matches && shown>=0 && img.dataset.f===String(shown) && img.complete && img.naturalWidth){ const r=story.getBoundingClientRect(); if(r.bottom>0 && r.top<innerHeight) pets.show(shown); } },160);
+      idle=setTimeout(()=>{ if(!mq.matches && intro==='done' && shown>=0 && img.dataset.f===String(shown) && img.complete && img.naturalWidth){ const r=story.getBoundingClientRect(); if(r.bottom>0 && r.top<innerHeight) pets.show(shown); } },160);
       if(!pending){pending=true;requestAnimationFrame(render)}
     }
     addEventListener('scroll',onScroll,{passive:true}); addEventListener('resize',onScroll); addEventListener('load',()=>{render(); onScroll();});
@@ -547,6 +585,12 @@
       await load('assets/mobile/model-data.js'); await load('assets/mobile/viewer.js');
       const v=window.OvercreekViewer(host, window.OVERCREEK_MODEL, {onFirstTouch:()=>{document.getElementById('mHint').style.opacity=0;}});
       if(v) document.getElementById('mPoster').style.opacity=0;
+      const tabs=document.getElementById('floorTabs');
+      if(v && v.setView){
+        tabs.classList.add('ready');
+        tabs.addEventListener('click',e=>{ const b=e.target.closest('button[data-view]'); if(!b) return;
+          tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',String(x===b))); v.setView(b.dataset.view); });
+      } else tabs.hidden=true;
     };
     const io=new IntersectionObserver(([e])=>{ if(e.isIntersecting){ io.disconnect(); start().catch(err=>console.warn('3D viewer failed',err)); } },{rootMargin:'600px 0px'});
     io.observe(host);

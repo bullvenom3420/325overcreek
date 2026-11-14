@@ -1,5 +1,8 @@
 /* 325 Overcreek - small self-contained WebGL viewer (no libraries).
-   Usage: OvercreekViewer(containerElement, window.OVERCREEK_MODEL, {onFirstTouch})
+   Usage: OvercreekViewer(containerElement, window.OVERCREEK_MODEL, {onFirstTouch}) -> {setView}
+   setView('ext' | 'f1' | 'f2'): the floors above lift straight up out of frame (along the camera's
+   up direction, so nothing ever swings toward the lens) while the camera tilts to look down into
+   that floor; going back, they drop into place. Rotation and zoom keep working in every view.
    Huckleberry and the cat are textured quads just inside their windows, depth-tested
    with the house, and animated from window.OVERCREEK_PETS. */
 (function () {
@@ -35,13 +38,13 @@
 
     const pos = b64(model.pos), nrm = b64(model.nrm), col = b64(model.col), lin = b64(model.lines);
     const meshP = prog(gl,
-      'attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 mvp;uniform mat4 rot;varying vec3 v;' +
+      'attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 rot;uniform vec3 off;varying vec3 v;' +
       'void main(){vec3 N=normalize((rot*vec4(n,0.)).xyz);vec3 L=normalize(vec3(-0.45,0.75,0.55));' +
       'float d=abs(dot(N,L));float sky=0.62+0.18*N.y;vec3 rim=vec3(0.80,0.86,0.80)*0.08*max(0.,dot(N,normalize(vec3(0.6,0.3,-0.7))));' +
-      'v=c*(sky+0.42*d)+rim;gl_Position=mvp*vec4(p,1.);}',
+      'v=c*(sky+0.42*d)+rim;gl_Position=vp*(rot*vec4(p,1.)+vec4(off,0.));}',
       'precision mediump float;varying vec3 v;void main(){gl_FragColor=vec4(min(v,vec3(1.)),1.);}');
     const lineP = prog(gl,
-      'attribute vec3 p;uniform mat4 mvp;void main(){gl_Position=mvp*vec4(p,1.);gl_Position.z-=0.0004*gl_Position.w;}',
+      'attribute vec3 p;uniform mat4 vp;uniform mat4 rot;uniform vec3 off;void main(){gl_Position=vp*(rot*vec4(p,1.)+vec4(off,0.));gl_Position.z-=0.0004*gl_Position.w;}',
       'precision mediump float;void main(){gl_FragColor=vec4(0.17,0.18,0.17,1.);}');
     const shP = prog(gl,
       'attribute vec2 p;uniform mat4 mvp;varying vec2 q;void main(){q=p;gl_Position=mvp*vec4(p.x*16.,0.02,p.y*17.,1.);}',
@@ -53,6 +56,33 @@
     const bS = buf(gl, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]));
     const bUV = buf(gl, new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]));
     const nTri = pos.length / 3, nLin = lin.length / 3;
+    const LAYERS = model.layers || [{ name: 'all', tri: [0, nTri], lin: [0, nLin] }];
+    /* which layers are lifted away in each view (bottom to top: ff gceil sf gallery rail beam roof) */
+    const VIEWS = {
+      ext: { up: [], el: Math.atan2(7.1, 60), ty: 3.9 },
+      f2: { up: ['roof'], el: 52 * Math.PI / 180, ty: 3.6 },
+      f1: { up: ['gceil', 'sf', 'gallery', 'rail', 'beam', 'roof'], el: 56 * Math.PI / 180, ty: 0.9 }
+    };
+    const LIFT = 46, LDUR = 0.8, STAG = 0.07;
+    const lift = LAYERS.map(() => ({ from: 0, to: 0, t0: 0, cur: 0 }));
+    let view = 'ext', el = VIEWS.ext.el, elFrom = el, elTo = el, ty = VIEWS.ext.ty, tyFrom = ty, tyTo = ty, camT0 = 0;
+    const CDUR = 0.9, ease = u => u <= 0 ? 0 : u >= 1 ? 1 : 0.5 - 0.5 * Math.cos(Math.PI * u);
+    function animating() { const now = performance.now() / 1000; return now - camT0 < CDUR || lift.some(l => l.cur !== l.to); }
+    function stepAnim() {
+      const now = performance.now() / 1000;
+      const u = ease((now - camT0) / CDUR); el = elFrom + (elTo - elFrom) * u; ty = tyFrom + (tyTo - tyFrom) * u;
+      for (const l of lift) { const v = (now - l.t0) / LDUR; l.cur = v >= 1 ? l.to : l.from + (l.to - l.from) * ease(v); }
+    }
+    function setView(name) {
+      if (!VIEWS[name] || name === view) return;
+      const V = VIEWS[name], now = performance.now() / 1000; stepAnim();
+      view = name; elFrom = el; elTo = V.el; tyFrom = ty; tyTo = V.ty; camT0 = now;
+      const goingUp = [], goingDown = [];
+      LAYERS.forEach((L, i) => { const to = V.up.includes(L.name) ? LIFT : 0; if (to !== lift[i].to) (to ? goingUp : goingDown).push(i); lift[i].to = to; });
+      goingUp.sort((a, b) => b - a).forEach((i, k) => { lift[i].from = lift[i].cur; lift[i].t0 = now + k * STAG; });          // top layer leaves first
+      goingDown.sort((a, b) => a - b).forEach((i, k) => { lift[i].from = lift[i].cur; lift[i].t0 = now + 0.12 + k * STAG; }); // lowest lands first
+      zoomTo = 1; oxTo = 0; oyTo = 0; updBtns(); kick();
+    }
 
     /* ---- pets: frames of the idle animation rendered once into textures ---- */
     const PETS = window.OVERCREEK_PETS;
@@ -101,15 +131,18 @@
     /* zoom: k = 1 shows the whole house; smaller k moves the camera closer. ox/oy pan the camera
        sideways/up so the spot you tapped stays under your finger while you zoom in. */
     let zoom = 1, zoomTo = 1, ox = 0, oy = 0, oxTo = 0, oyTo = 0, fovY = 30 * Math.PI / 180, aspNow = 1;
-    const ZMIN = 0.28, ZMAX = 1.15, TY = 3.9, DY = 7.1, DZ = 60, DL = Math.hypot(DY, DZ), UY = DZ / DL, UZ = -DY / DL;
-    function viewMat() { const k = zoom, tx = ox, ty = TY + oy * UY, tz = oy * UZ; return lookAt([tx, ty + DY * k, tz + DZ * k], [tx, ty, tz], [0, 1, 0]); }
+    const ZMIN = 0.28, ZMAX = 1.15, DL = Math.hypot(7.1, 60);
+    function camUp() { return [0, Math.cos(el), -Math.sin(el)]; }
+    function viewMat() { const k = zoom, U = camUp(), tx = ox, cy = ty + oy * U[1], tz = oy * U[2];
+      return lookAt([tx, cy + DL * Math.sin(el) * k, tz + DL * Math.cos(el) * k], [tx, cy, tz], [0, 1, 0]); }
     const halfH = k => DL * k * Math.tan(fovY / 2);
     function clampPan(k) {
       if (k >= 1 - 1e-3) { oxTo = 0; oyTo = 0; return; }
       const hh = halfH(k), hw = hh * aspNow;
       // keep the aim point on the house: within its width, no lower than the doorsills, no higher than the ridge
       const mx = Math.max(0, 10 - 0.5 * hw); oxTo = Math.max(-mx, Math.min(mx, oxTo));
-      oyTo = Math.max(0.6 - TY, Math.min(Math.max(0.6 - TY, 10.5 - TY - 0.5 * hh), oyTo));
+      if (view === 'ext') oyTo = Math.max(0.6 - ty, Math.min(Math.max(0.6 - ty, 10.5 - ty - 0.5 * hh), oyTo));
+      else { const my = Math.max(0, 11 - 0.5 * hh); oyTo = Math.max(-my, Math.min(my, oyTo)); }
     }
     function zoomAt(z, nx, ny) {                                       // nx, ny: -1..1 across the canvas
       const k0 = zoomTo, k1 = Math.max(ZMIN, Math.min(ZMAX, z)), f = 1 - k1 / k0, hh = halfH(k0);
@@ -130,7 +163,8 @@
       const R = rotY(angle);
       zoom += (zoomTo - zoom) * 0.2; ox += (oxTo - ox) * 0.2; oy += (oyTo - oy) * 0.2;
       if (Math.abs(zoomTo - zoom) < 1e-4 && Math.abs(oxTo - ox) < 1e-3 && Math.abs(oyTo - oy) < 1e-3) { zoom = zoomTo; ox = oxTo; oy = oyTo; }
-      const vp = mul(proj, viewMat()), mvp = mul(vp, R);
+      stepAnim();
+      const vp = mul(proj, viewMat()), mvp = mul(vp, R), U = camUp();
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       // ground shadow (rotates with the house)
       gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -139,21 +173,29 @@
       gl.disable(gl.BLEND); gl.enable(gl.DEPTH_TEST);
       // house
       gl.useProgram(meshP);
-      gl.uniformMatrix4fv(gl.getUniformLocation(meshP, 'mvp'), false, mvp);
+      gl.uniformMatrix4fv(gl.getUniformLocation(meshP, 'vp'), false, vp);
       gl.uniformMatrix4fv(gl.getUniformLocation(meshP, 'rot'), false, R);
+      const uOffM = gl.getUniformLocation(meshP, 'off');
       const a1 = attr(meshP, 'p', bP, 3), a2 = attr(meshP, 'n', bN, 3), a3 = attr(meshP, 'c', bC, 3);
-      gl.drawArrays(gl.TRIANGLES, 0, nTri);
+      LAYERS.forEach((L, i) => { const h = lift[i].cur; if (h >= LIFT - 1e-3) return;
+        gl.uniform3f(uOffM, U[0] * h, U[1] * h, U[2] * h); gl.drawArrays(gl.TRIANGLES, L.tri[0], L.tri[1]); });
       gl.disableVertexAttribArray(a2); gl.disableVertexAttribArray(a3); gl.disableVertexAttribArray(a1);
       // outlines
-      gl.useProgram(lineP); gl.uniformMatrix4fv(gl.getUniformLocation(lineP, 'mvp'), false, mvp);
-      const a4 = attr(lineP, 'p', bL, 3); gl.drawArrays(gl.LINES, 0, nLin); gl.disableVertexAttribArray(a4);
+      gl.useProgram(lineP);
+      gl.uniformMatrix4fv(gl.getUniformLocation(lineP, 'vp'), false, vp);
+      gl.uniformMatrix4fv(gl.getUniformLocation(lineP, 'rot'), false, R);
+      const uOffL = gl.getUniformLocation(lineP, 'off');
+      const a4 = attr(lineP, 'p', bL, 3);
+      LAYERS.forEach((L, i) => { const h = lift[i].cur; if (h >= LIFT - 1e-3) return;
+        gl.uniform3f(uOffL, U[0] * h, U[1] * h, U[2] * h); gl.drawArrays(gl.LINES, L.lin[0], L.lin[1]); });
+      gl.disableVertexAttribArray(a4);
       drawPets(mvp);
     }
     function tick() {
       raf = 0;
       if (!dragging) { if (auto) angle += 0.0017; else { angle += vel; vel *= 0.94; if (Math.abs(vel) < 1e-5) vel = 0; } }
       draw();
-      if (visible && (auto || dragging || vel || pets.ready || zoom !== zoomTo || ox !== oxTo || oy !== oyTo)) raf = requestAnimationFrame(tick);
+      if (visible && (auto || dragging || vel || pets.ready || animating() || zoom !== zoomTo || ox !== oxTo || oy !== oyTo)) raf = requestAnimationFrame(tick);
     }
     function kick() { if (!raf && visible) raf = requestAnimationFrame(tick); }
 
@@ -205,6 +247,6 @@
     new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) kick(); }).observe(host);
     addEventListener('resize', () => { draw(); });
     draw(); kick();
-    return { canvas };
+    return { canvas, setView };
   };
 })();
