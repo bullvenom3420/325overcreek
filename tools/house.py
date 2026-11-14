@@ -28,10 +28,16 @@ S6 = 6.0 / 12.0
 
 faces = []
 PET_QUADS = {}
+FACE_GROUP = []   # build-animation group of each face (parallel to faces)
+GROUP = ['ff']
+
+def setgroup(g):
+    GROUP[0] = g
 
 
 def face(pts, mat):
     faces.append(([list(map(float, p)) for p in pts], mat))
+    FACE_GROUP.append(GROUP[0])
 
 
 # ------------------------------------------------------------------ primitives
@@ -154,7 +160,9 @@ def hiproof(x0, x1, y0, y1, edges, mat='roof', gable=None):
 # ------------------------------------------------------------------ the house
 def build():
     faces.clear()
+    FACE_GROUP.clear()
     PET_QUADS.clear()
+    setgroup('ff')
     F, R = -1, 1
 
     # ---- first floor envelope (brick)
@@ -163,6 +171,7 @@ def build():
           (38, 42.25), (22.5, 42.25), (22.5, 54.5), (17, 54.5), (17, 59.67), (0, 59.67),
           (0, 35.83), (2, 35.83)]
     prism_z(0, P1, ff)
+    setgroup('sf')
     # ---- second floor envelope (brick; Bed 5 block is siding)
     sf = [(2, 10.67), (10.67, 10.67), (10.67, 5), (52.67, 5), (52.67, 10.67), (61, 10.67),
           (61, 42.25), (39, 42.25), (39, 54.5), (16, 54.5), (16, 42.25), (2, 42.25)]
@@ -171,12 +180,17 @@ def build():
     face([(22.5, 42.25, P1), (38, 42.25, P1), (38, 54.5, P1), (22.5, 54.5, P1)], 'wall')
     box(22.5, 38, 54.1, 54.5, P1 - 0.9, P1, 'trim')          # beam at the open rear edge
 
+    setgroup('ff')
     # ---- front gallery: porch slab, balcony floor, columns, beams, X railings
     box(10.67, 52.67, -0.1, 5, 0, 0.4, 'trim')                # porch slab + step
+    setgroup('gallery')
     box(10.67, 52.67, -0.1, 5, P1 - 0.2, F2 + 0.3, 'trim')    # balcony floor / trim band
+    setgroup('beam')
     box(10.67, 52.67, -0.1, 1.0, P2 - 1.2, P2 - 0.2, 'trim')   # top beam
+    setgroup('gallery')
     for cx in (11.3, 27.0, 36.33, 52.03):
         column(cx, 0.55, 0.5, 0.4, P2 - 1.2)
+    setgroup('rail')
     rail_z0, rail_z1 = F2 + 0.3, F2 + 3.8
     for a, b in ((11.8, 26.5), (27.5, 35.83), (36.83, 51.53)):
         ry0, ry1 = 0.45, 0.65
@@ -194,6 +208,7 @@ def build():
                 face([(p0, ry0, q0 - d), (p1, ry0, q1 - d), (p1, ry0, q1 + d), (p0, ry0, q0 + d)], 'trim')
                 face([(p0, ry1, q0 - d), (p1, ry1, q1 - d), (p1, ry1, q1 + d), (p0, ry1, q0 + d)], 'trim')
 
+    setgroup('open')
     # ---- openings: front (y = 5, under the gallery)
     for u0, u1 in ((16.5, 21.5), (41.83, 46.83)):                 # study / dining French doors
         window('y', 5, F, u0, u1, FF, FF + 8.3, sill=False, mull=[(u0 + u1) / 2])
@@ -230,6 +245,7 @@ def build():
     window('y', 54.5, R, 29.6, 34.6, F2 + 3.0, F2 + 7.0, mull=[32.1])    # Bed 5 5040
     window('y', 54.5, R, 17.85, 20.85, F2 + 6.0, F2 + 8.0)              # Bath 5 3020
 
+    setgroup('roof')
     # ---- roofs (eave outlines from the roof plan; overhangs 2'-0" main, 1'-6" gallery)
     eA = P2 - 0.2
     sA = 0.69
@@ -237,8 +253,10 @@ def build():
     hiproof(0, 63, 8.67, 44.25, {'f': (20.3, S8), 'l': (20.3, S8), 'r': (20.3, S8), 'b': (20.6, S6)})
     eC = P2 - 1.0 * S8
     hiproof(15.0, 40.0, 22.0, 55.5, {'f': (eC, 3.0), 'b': (eC, S8), 'l': (eC, S8), 'r': (eC, S8)})
+    setgroup('roofD')
     eD = 10.08 - 1.2 * S8
     hiproof(-1.1, 17.9, 34.9, 60.8, {'b': (eD, S8), 'l': (eD, S8), 'r': (eD, S8)})
+    setgroup('roofE')
     eE = 10.08 - 1.3 * S8
     hiproof(36.8, 62.3, 42.4, 69.8, {'b': (eE, S8), 'l': (eE, S8), 'r': (eE, S8)})
 
